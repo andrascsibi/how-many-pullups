@@ -4,86 +4,102 @@ import (
     "html/template"
     "net/http"
     "time"
+    "strconv"
 
     "appengine"
     "appengine/datastore"
-    "appengine/user"
 )
 
-type Greeting struct {
-    Author  string
-    Content string
-    Date    time.Time
+type PullupSet struct {
+    Reps int
+    Date time.Time
 }
 
 func init() {
     http.HandleFunc("/", root)
-    http.HandleFunc("/sign", sign)
+    http.HandleFunc("/admin", admin)
+    http.HandleFunc("/add", add)
 }
 
-// guestbookKey returns the key used for all guestbook entries.
-func guestbookKey(c appengine.Context) *datastore.Key {
-    // The string "default_guestbook" here could be varied to have multiple guestbooks.
-    return datastore.NewKey(c, "Guestbook", "default_guestbook", 0, nil)
+func pullupSetKey(c appengine.Context) *datastore.Key {
+    return datastore.NewKey(c, "Pullups", "andras_pullups", 0, nil)
+}
+
+func totalPullups(c appengine.Context) (sum int, err error) {
+    q := datastore.NewQuery("PullupSet").Ancestor(pullupSetKey(c)).Order("-Date")
+    sets := make([]PullupSet, 0)
+    _, err = q.GetAll(c, &sets)
+    if err != nil {
+      return
+    }
+    for _, s := range sets {
+      sum += s.Reps
+    }
+    return
+}
+
+func admin(w http.ResponseWriter, r *http.Request) {
+    c := appengine.NewContext(r)
+    sum, err := totalPullups(c)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+    if err = adminTemplate.Execute(w, sum); err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
 }
 
 func root(w http.ResponseWriter, r *http.Request) {
     c := appengine.NewContext(r)
-    // Ancestor queries, as shown here, are strongly consistent with the High
-    // Replication Datastore. Queries that span entity groups are eventually
-    // consistent. If we omitted the .Ancestor from this query there would be
-    // a slight chance that Greeting that had just been written would not
-    // show up in a query.
-    q := datastore.NewQuery("Greeting").Ancestor(guestbookKey(c)).Order("-Date").Limit(10)
-    greetings := make([]Greeting, 0, 10)
-    if _, err := q.GetAll(c, &greetings); err != nil {
+    sum, err := totalPullups(c)
+    if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
     }
-    if err := guestbookTemplate.Execute(w, greetings); err != nil {
+    if err = rootTemplate.Execute(w, sum); err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
     }
 }
 
-var guestbookTemplate = template.Must(template.New("book").Parse(guestbookTemplateHTML))
+var rootTemplate = template.Must(template.New("root").Parse(rootTemplateHTML))
 
-const guestbookTemplateHTML = `
+const rootTemplateHTML = `
 <html>
   <body>
-    {{range .}}
-      {{with .Author}}
-        <p><b>{{.}}</b> wrote:</p>
-      {{else}}
-        <p>An anonymous person wrote:</p>
-      {{end}}
-      <pre>{{.Content}}</pre>
-    {{end}}
-    <form action="/sign" method="post">
-      <div><textarea name="content" rows="3" cols="60"></textarea></div>
-      <div><input type="submit" value="Sign Guestbook"></div>
+    <div>Total pullups: </div>
+    <div>{{.}}</div>
+  </body>
+</html>
+`
+
+var adminTemplate = template.Must(template.New("admin").Parse(adminTemplateHTML))
+
+const adminTemplateHTML = `
+<html>
+  <body>
+    <div>Total pullups: </div>
+    <div>{{.}}</div>
+    <form action="/add" method="post">
+      <div><input type="submit" value="5" name="reps"></div>
     </form>
   </body>
 </html>
 `
 
-func sign(w http.ResponseWriter, r *http.Request) {
+func add(w http.ResponseWriter, r *http.Request) {
     c := appengine.NewContext(r)
-    g := Greeting{
-        Content: r.FormValue("content"),
-        Date:    time.Now(),
+    reps, err := strconv.Atoi(r.FormValue("reps"))
+    if err != nil {
+      http.Error(w, "that's not a number yo", http.StatusBadRequest)
     }
-    if u := user.Current(c); u != nil {
-        g.Author = u.String()
+    ps := PullupSet {
+        Reps: reps,
+        Date: time.Now(),
     }
-    // We set the same parent key on every Greeting entity to ensure each Greeting
-    // is in the same entity group. Queries across the single entity group
-    // will be consistent. However, the write rate to a single entity group
-    // should be limited to ~1/second.
-    key := datastore.NewIncompleteKey(c, "Greeting", guestbookKey(c))
-    _, err := datastore.Put(c, key, &g)
+    key := datastore.NewIncompleteKey(c, "PullupSet", pullupSetKey(c))
+    _, err = datastore.Put(c, key, &ps)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
-    http.Redirect(w, r, "/", http.StatusFound)
+    http.Redirect(w, r, "/admin", http.StatusFound)
 }

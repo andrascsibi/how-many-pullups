@@ -15,3 +15,15 @@ indexes:
   properties:
   - name: Date
     direction: desc
+
+- kind: PullupSet
+  ancestor: yes
+  properties:
+  - name: Date
+    direction: desc
+
+- kind: PullupSet
+  ancestor: yes
+  properties:
+  - name: date
+    direction: desc
