@@ -1,0 +1,7 @@
+<html>
+  <body>
+    <div>Total pullups: </div>
+    <div>{{.}}</div>
+  </body>
+</html>
+

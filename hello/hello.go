@@ -60,30 +60,8 @@ func root(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-var rootTemplate = template.Must(template.New("root").Parse(rootTemplateHTML))
-
-const rootTemplateHTML = `
-<html>
-  <body>
-    <div>Total pullups: </div>
-    <div>{{.}}</div>
-  </body>
-</html>
-`
-
-var adminTemplate = template.Must(template.New("admin").Parse(adminTemplateHTML))
-
-const adminTemplateHTML = `
-<html>
-  <body>
-    <div>Total pullups: </div>
-    <div>{{.}}</div>
-    <form action="/add" method="post">
-      <div><input type="submit" value="5" name="reps"></div>
-    </form>
-  </body>
-</html>
-`
+var rootTemplate = template.Must(template.New("root").ParseFiles("tmpl/root"))
+var adminTemplate = template.Must(template.New("admin").ParseFiles("tmpl/admin"))
 
 func add(w http.ResponseWriter, r *http.Request) {
     c := appengine.NewContext(r)

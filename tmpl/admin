@@ -1,0 +1,10 @@
+<html>
+  <body>
+    <div>Total pullups: </div>
+    <div>{{.}}</div>
+    <form action="/add" method="post">
+      <div><input type="submit" value="5" name="reps"></div>
+    </form>
+  </body>
+</html>
+
