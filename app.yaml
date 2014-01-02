@@ -8,6 +8,6 @@ default_expiration: "1h"
 handlers:
 - url: /(admin|add)
   script: _go_app
-  login: required
+  login: admin
 - url: /.*
   script: _go_app
