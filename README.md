@@ -1,6 +1,6 @@
 # How many pullups?
 
-A small AppEngine webapp to track my pullup challange progress publicly.
+How many pullups did I do today? A small AppEngine webapp to track my pullup challange progress publicly.
 
 ## What's the challenge?
 

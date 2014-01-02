@@ -6,6 +6,8 @@ api_version: go1
 default_expiration: "1h"
 
 handlers:
+- url: /(admin|add)
+  script: _go_app
+  login: required
 - url: /.*
   script: _go_app
-
