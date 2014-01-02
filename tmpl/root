@@ -1,3 +1,4 @@
+{{define "header"}}
 <html>
   <head>
     <title>How Many Pullups?</title>
@@ -11,6 +12,26 @@
       </h1>
       <p>osszesen januarban: <span class="label label-info">{{.Total}}</span></p>
     </div>
+{{end}}
+
+{{define "admincontrols"}}
+  <form action="/add" method="post">
+    <div><input type="submit" value="5" name="reps"></div>
+  </form>
+{{end}}
+
+{{define "footer"}}
   </body>
 </html>
+{{end}}
 
+{{define "root"}}
+  {{template "header" .}}
+  {{template "footer" .}}
+{{end}}
+
+{{define "admin"}}
+  {{template "header" .}}
+  {{template "admincontrols" .}}
+  {{template "footer" .}}
+{{end}}

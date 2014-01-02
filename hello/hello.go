@@ -50,12 +50,12 @@ func admin(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
     }
-    if err = adminTemplate.Execute(w, stat.Today); err != nil {
+    if err = adminTemplate.ExecuteTemplate(w, "admin", stat); err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
     }
 }
 
-var adminTemplate = template.Must(template.New("admin").ParseFiles("tmpl/admin"))
+var adminTemplate = template.Must(template.New("root").ParseFiles("tmpl/root"))
 
 type Stat struct {
   Today int
@@ -68,7 +68,7 @@ func root(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
     }
-    if err = rootTemplate.Execute(w, stat); err != nil {
+    if err = rootTemplate.ExecuteTemplate(w, "root", stat); err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
     }
 }
