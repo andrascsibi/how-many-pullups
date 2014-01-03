@@ -1,11 +1,19 @@
 {{define "header"}}
 <html>
   <head>
-    <title>How Many Pullups?</title>
+    <title>{{with .}}({{.}}){{end}} How Many Pullups?</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
   </head>
   <body>
+{{end}}
+
+{{define "usermenu"}}
+
+
+{{end}}
+
+{{define "jumbocounter"}}
     <div class="jumbotron">
       
       <h1>Mennyit húzódzkodott eddig Andris?</h1>
@@ -33,21 +41,48 @@
 </nav>
 {{end}}
 
-{{define "footer"}}
+{{define "message"}}
   <footer class="container">
     <p class="">Csibi András vagyok, és 2014. januárjában megcsinálok összesen 1000 húzodzkodást. Itt élőben követhető, hogy hogy állok. Drukkoljatok!:)</p>
   </footer>
+{{end}}
+
+{{define "footer"}}
+
   </body>
 </html>
 {{end}}
 
 {{define "root"}}
-  {{template "header" .}}
+  {{template "header" .Today}}
+  {{template "jumbocounter" .}}
+  {{template "message" .}}
+  <script>setInterval(function(){location.reload()}, 60 * 1000);</script>
   {{template "footer" .}}
 {{end}}
 
 {{define "admin"}}
-  {{template "header" .}}
+  {{template "header" .Today}}
+  {{template "usermenu" .}}
+  {{template "jumbocounter" .}}
   {{template "admincontrols" .}}
   {{template "footer" .}}
+{{end}}
+
+{{define "hello"}}
+  {{template "header"}}
+  <div class="jumbotron">
+    <h1>Hello {{.Email}}!</h1>
+    <p></p>
+    <form class="navbar-form" action="/create" method="post">
+      <p>Let's get you started!</p>
+      <input type="text" id="username" name="username" placeholder="Username"/>
+      <p>Your challenge board will be publicly available at http://how-many-pullups.appspot.com/&lt;username&gt; </p>
+      <button type="submit" class="btn btn-primary btn-lg">Create account!</button>
+    </form>
+    
+    <a class="btn btn-default navbar-right" role="button" href="{{.LogoutURL}}">Log out</a>
+  
+  </div>
+  {{template "footer"}}
 {{end}}
