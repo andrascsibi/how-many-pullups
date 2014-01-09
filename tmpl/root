@@ -3,7 +3,10 @@
   <head>
     <title>{{with .}}({{.}}){{end}} How Many Pullups?</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+    
+
   </head>
   <body>
 {{end}}
@@ -45,9 +48,13 @@
   <footer class="container">
     <p class="">Csibi András vagyok, és 2014. januárjában megcsinálok összesen 1000 húzodzkodást. Itt élőben követhető, hogy hogy állok. Drukkoljatok!:)</p>
   </footer>
+
 {{end}}
 
 {{define "footer"}}
+
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular.min.js"></script>
+  <!-- // <script src="/bower_components/angular/angular.min.js"></script> -->
 
   </body>
 </html>
@@ -83,6 +90,8 @@
     
     <a class="btn btn-default navbar-right" role="button" href="{{.LogoutURL}}">Log out</a>
   
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.7/angular.min.js"></script>
+
   </div>
   {{template "footer"}}
 {{end}}
