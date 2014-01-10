@@ -5,7 +5,7 @@ import (
     "net/http"
     "time"
     "strconv"
-    "fmt"
+    "encoding/json"
 
     "appengine"
     "appengine/datastore"
@@ -22,6 +22,10 @@ func init() {
     http.HandleFunc("/total", total)
     http.HandleFunc("/", root)
 }
+
+//func pullupSetKey(c appengine.Context, user string) *datastore.Key {
+//    return datastore.NewKey(c, "Pullups", "andras_pullups", 0, nil)
+//}
 
 func pullupSetKey(c appengine.Context) *datastore.Key {
     return datastore.NewKey(c, "Pullups", "andras_pullups", 0, nil)
@@ -81,7 +85,12 @@ func total(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
     }
-    fmt.Fprint(w, stat)
+    statJson, err := json.Marshal(stat)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+    w.Header().Set("Content-type", "application/json")
+    w.Write(statJson)
 }
 
 func add(w http.ResponseWriter, r *http.Request) {
