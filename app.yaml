@@ -20,10 +20,6 @@ handlers:
 - url: /total
   script: _go_app
 
-- url: /hello
-  script: _go_app
-  login: required
-
 - url: /(.*)
   static_dir: html
 

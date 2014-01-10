@@ -14,19 +14,23 @@ angular.module('how-many-pullups', ['ngRoute'])
 
   $routeProvider
     .when('/', {
-      controller:'JumboCounterCtrl',
+      controller:'TotalCtrl',
       templateUrl:'/html/jumbocounter.html'
     })
     .when('/admin', {
-       controller:'IncrementCtrl',
+       controller:'TotalCtrl',
        templateUrl:'/html/admin.html'
+    })
+    .when('/hello', {
+       controller:'HelloCtrl',
+       templateUrl:'/html/hello.html'
     })
     .otherwise({
       redirectTo:'/'
     });
 }])
  
-.controller('JumboCounterCtrl', ['$scope', '$http', function($scope, $http) {
+.controller('TotalCtrl', ['$scope', '$http', function($scope, $http) {
   
   $http({method: 'GET', url: 'total'}).
     success(function(data, status, headers, config) {
@@ -37,14 +41,8 @@ angular.module('how-many-pullups', ['ngRoute'])
   });
 }])
  
-.controller('IncrementCtrl', ['$scope', '$http', function($scope, $http) {
-  
-  $http({method: 'GET', url: 'total'}).
-    success(function(data, status, headers, config) {
-      $scope.stat = data;
-    }).
-    error(function(data, status, headers, config) {
-      console.log("request failed");
-  });
+.controller('HelloCtrl', ['$scope', '$http', function($scope, $http) {
+  $scope.email = "foo";
 }]);
+ 
  
