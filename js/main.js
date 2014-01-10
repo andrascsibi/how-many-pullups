@@ -17,14 +17,10 @@ angular.module('how-many-pullups', ['ngRoute'])
       controller:'JumboCounterCtrl',
       templateUrl:'/html/jumbocounter.html'
     })
-    // .when('/edit/:projectId', {
-    //   controller:'EditCtrl',
-    //   templateUrl:'detail.html'
-    // })
-    // .when('/new', {
-    //   controller:'CreateCtrl',
-    //   templateUrl:'detail.html'
-    // })
+    .when('/admin', {
+       controller:'IncrementCtrl',
+       templateUrl:'/html/admin.html'
+    })
     .otherwise({
       redirectTo:'/'
     });
@@ -39,8 +35,16 @@ angular.module('how-many-pullups', ['ngRoute'])
     error(function(data, status, headers, config) {
       console.log("request failed");
   });
-
-//  $scope.today = 4;
-//  $scope.total = 12;
+}])
+ 
+.controller('IncrementCtrl', ['$scope', '$http', function($scope, $http) {
+  
+  $http({method: 'GET', url: 'total'}).
+    success(function(data, status, headers, config) {
+      $scope.stat = data;
+    }).
+    error(function(data, status, headers, config) {
+      console.log("request failed");
+  });
 }]);
  

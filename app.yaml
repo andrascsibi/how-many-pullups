@@ -13,7 +13,7 @@ handlers:
 - url: /js
   static_dir: js
 
-- url: /(admin|add)
+- url: /add
   script: _go_app
   login: admin
 
