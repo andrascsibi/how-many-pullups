@@ -23,6 +23,11 @@ handlers:
 - url: /(.*)
   static_dir: html
 
+- url: /admin
+  static_files: html/index.html
+  upload: html/(.*)
+  login: admin
+
 - url: /(.*)
   static_files: html/index.html
   upload: html/(.*)
