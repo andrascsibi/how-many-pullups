@@ -2,7 +2,7 @@ console.log("what up");
 
 angular.module('how-many-pullups', ['ngRoute'])
  
-//.value('fbURL', 'https://angularjs-projects.firebaseio.com/')
+.value('reloadInterval', 5 * 60 * 1000)
  
 //.factory('Projects', function($firebase, fbURL) {
 //  return $firebase(new Firebase(fbURL));
@@ -30,8 +30,8 @@ angular.module('how-many-pullups', ['ngRoute'])
     });
 }])
  
-.controller('TotalCtrl', ['$scope', '$http', '$interval',
-  function($scope, $http, $interval) {
+.controller('TotalCtrl', ['$scope', '$http', '$interval', 'reloadInterval',
+  function($scope, $http, $interval, reloadInterval) {
 
   if (!$scope.refresh) {
     var refresh = function() {
@@ -45,7 +45,7 @@ angular.module('how-many-pullups', ['ngRoute'])
     };
     $scope.refresh = refresh;
     refresh();
-    $interval(refresh, 10 * 1000);
+    $interval(refresh, reloadInterval);
   }
 }])
  
