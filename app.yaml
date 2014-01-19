@@ -20,18 +20,13 @@ handlers:
 - url: /total
   script: _go_app
 
-- url: /admin
-  static_files: html/index.html
-  upload: html/(.*)
-  login: admin
-
-- url: /html
-  static_dir: html
+- url: /app
+  static_dir: app
 
 - url: /(.*)
-  static_dir: html
+  static_dir: app
 
 - url: /(.*)
-  static_files: html/index.html
-  upload: html/(.*)
+  static_files: app/index.html
+  upload: app/(.*)
 

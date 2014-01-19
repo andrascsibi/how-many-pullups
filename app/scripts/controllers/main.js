@@ -1,34 +1,6 @@
-console.log("what up");
-
-angular.module('how-many-pullups', ['ngRoute'])
+angular.module('pullApp')
  
 .value('reloadInterval', 5 * 60 * 1000)
- 
-//.factory('Projects', function($firebase, fbURL) {
-//  return $firebase(new Firebase(fbURL));
-//})
- 
-.config(['$routeProvider', '$locationProvider',
-  function($routeProvider, $locationProvider) {
-  $locationProvider.html5Mode(true);
-
-  $routeProvider
-    .when('/', {
-      controller:'TotalCtrl',
-      templateUrl:'/html/jumbocounter.html'
-    })
-    .when('/admin', {
-       controller:'TotalCtrl',
-       templateUrl:'/html/admin.html'
-    })
-    .when('/hello', {
-       controller:'HelloCtrl',
-       templateUrl:'/html/hello.html'
-    })
-    .otherwise({
-      redirectTo:'/'
-    });
-}])
  
 .controller('TotalCtrl', ['$scope', '$http', '$interval', 'reloadInterval',
   function($scope, $http, $interval, reloadInterval) {
