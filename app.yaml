@@ -7,17 +7,11 @@ api_version: go1
 
 handlers:
 
-- url: /stylesheets
-  static_dir: stylesheets
-
-- url: /js
-  static_dir: js
-
 - url: /add
   script: _go_app
   login: admin
 
-- url: /total
+- url: /(total|export)
   script: _go_app
 
 - url: /app

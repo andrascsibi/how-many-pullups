@@ -1,11 +1,11 @@
 package hello
 
 import (
-    "html/template"
     "net/http"
     "time"
     "strconv"
     "encoding/json"
+    "encoding/csv"
 
     "appengine"
     "appengine/datastore"
@@ -17,10 +17,9 @@ type PullupSet struct {
 }
 
 func init() {
-    http.HandleFunc("/admin", admin)
     http.HandleFunc("/add", add)
     http.HandleFunc("/total", total)
-    http.HandleFunc("/", root)
+    http.HandleFunc("/export", export)
 }
 
 //func pullupSetKey(c appengine.Context, user string) *datastore.Key {
@@ -48,36 +47,10 @@ func totalPullups(c appengine.Context) (stat Stat, err error) {
     return
 }
 
-func admin(w http.ResponseWriter, r *http.Request) {
-    c := appengine.NewContext(r)
-    stat, err := totalPullups(c)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-    }
-    if err = adminTemplate.ExecuteTemplate(w, "admin", stat); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-    }
-}
-
-var adminTemplate = template.Must(template.New("root").ParseFiles("tmpl/root"))
-
 type Stat struct {
   Today int
   Total int
 }
-
-func root(w http.ResponseWriter, r *http.Request) {
-    c := appengine.NewContext(r)
-    stat, err := totalPullups(c)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-    }
-    if err = rootTemplate.ExecuteTemplate(w, "root", stat); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-    }
-}
-
-var rootTemplate = template.Must(template.New("root").ParseFiles("tmpl/root"))
 
 func total(w http.ResponseWriter, r *http.Request) {
     c := appengine.NewContext(r)
@@ -91,6 +64,40 @@ func total(w http.ResponseWriter, r *http.Request) {
     }
     w.Header().Set("Content-type", "application/json")
     w.Write(statJson)
+}
+
+func exportPullups(c appengine.Context) (sets []PullupSet, err error) {
+    q := datastore.NewQuery("PullupSet").Ancestor(pullupSetKey(c)).Order("-Date")
+    sets = make([]PullupSet, 0)
+    _, err = q.GetAll(c, &sets)
+    if err != nil {
+      return
+    }
+    return
+}
+
+func export(w http.ResponseWriter, r *http.Request) {
+    c := appengine.NewContext(r)
+    sets, err := exportPullups(c)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
+    switch r.FormValue("format") {
+    case "json":
+        w.Header().Set("Content-type", "application/json")
+        setsJson, err := json.Marshal(sets)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+        }
+        w.Write(setsJson)
+    default:
+        w.Header().Set("Content-type", "application/csv")
+        cw := csv.NewWriter(w)
+        for _, s := range sets {
+            cw.Write([]string {s.Date.Format(time.RFC3339), strconv.Itoa(s.Reps)})
+        }
+        cw.Flush()
+    }
 }
 
 func add(w http.ResponseWriter, r *http.Request) {
