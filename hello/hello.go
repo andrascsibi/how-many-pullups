@@ -83,20 +83,20 @@ func export(w http.ResponseWriter, r *http.Request) {
         http.Error(w, err.Error(), http.StatusInternalServerError)
     }
     switch r.FormValue("format") {
-    case "json":
-        w.Header().Set("Content-type", "application/json")
-        setsJson, err := json.Marshal(sets)
-        if err != nil {
-            http.Error(w, err.Error(), http.StatusInternalServerError)
-        }
-        w.Write(setsJson)
-    default:
+    case "csv":
         w.Header().Set("Content-type", "application/csv")
         cw := csv.NewWriter(w)
         for _, s := range sets {
             cw.Write([]string {s.Date.Format(time.RFC3339), strconv.Itoa(s.Reps)})
         }
         cw.Flush()
+    default:
+        w.Header().Set("Content-type", "application/json")
+        setsJson, err := json.Marshal(sets)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+        }
+        w.Write(setsJson)
     }
 }
 

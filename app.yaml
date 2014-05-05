@@ -11,7 +11,7 @@ handlers:
   script: _go_app
   login: admin
 
-- url: /(total|export)
+- url: /(total|export|whoami)
   script: _go_app
 
 - url: /app
