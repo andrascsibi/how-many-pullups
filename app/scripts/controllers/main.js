@@ -1,7 +1,7 @@
 angular.module('pullApp')
- 
+
 .value('reloadInterval', 5 * 60 * 1000)
- 
+
 .controller('TotalCtrl', ['$scope', '$http', '$interval', 'reloadInterval',
   function($scope, $http, $interval, reloadInterval) {
 
@@ -18,9 +18,10 @@ angular.module('pullApp')
     $scope.refresh = refresh;
     refresh();
     $interval(refresh, reloadInterval);
+    $scope.repButtons = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
   }
 }])
- 
+
 .controller('HelloCtrl', ['$scope', '$http', function($scope, $http) {
   $http({method: 'GET', url: 'whoami'}).
     success(function(data, status, headers, config) {
@@ -30,5 +31,5 @@ angular.module('pullApp')
       console.log("request failed");
   });
 }]);
- 
- 
+
+
