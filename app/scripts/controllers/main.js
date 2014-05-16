@@ -30,6 +30,18 @@ angular.module('pullApp')
     error(function(data, status, headers, config) {
       console.log("request failed");
   });
-}]);
+}])
 
+
+.controller('HomePageCtrl', ['$scope', '$http', '$location', function($scope, $http, $location){
+  $http.get('whoami').
+  success(function(data, status, headers, config) {
+    console.log(status);
+    $scope.whoami = data;
+  }).
+  error(function(data, status, headers, config) {
+    console.log("request failed");
+  });
+
+}]);
 

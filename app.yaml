@@ -7,11 +7,10 @@ api_version: go1
 
 handlers:
 
-- url: /add
-  script: _go_app
-  login: admin
-
 - url: /(total|export|whoami)
+  script: _go_app
+
+- url: /accounts/(.*)
   script: _go_app
 
 - url: /app

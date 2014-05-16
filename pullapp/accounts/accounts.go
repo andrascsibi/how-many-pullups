@@ -1,21 +1,28 @@
 package accounts
 
 import (
-    "html/template"
     "net/http"
     "time"
-    "errors"
-    // "strconv"
-    // "fmt"
-    "regexp"
 
+    "crypto/sha1"
+    "io"
+    "encoding/base64"
+//    "errors"
+    // "strconv"
+//     "fmt"
+//    "regexp"
+
+    "errors"
+    "strings"
     "appengine"
     "appengine/user"
-//    "appengine/datastore"
+    "encoding/json"
+    "appengine/datastore"
 )
 
 type Account struct {
     Email      string
+    ID         string
     ScreenName string
     Admin      bool
     RegDate    time.Time
@@ -25,76 +32,127 @@ type Account struct {
 }
 
 type Settings struct {
-    
+
 }
 
 type Challenge struct {
-  Name   string
   Title  string
-  Message string
+  Description string
+  Active bool
 }
 
 func init() {
-    http.HandleFunc("/hello", hello)
-    http.HandleFunc("/create", create)
+    http.HandleFunc("/whoami", whoami)
+    http.HandleFunc("/accounts/", accounts)
 }
 
-func hello(w http.ResponseWriter, r *http.Request) {
+func accounts(w http.ResponseWriter, r *http.Request) {
     c := appengine.NewContext(r)
+    path := strings.Split(r.URL.Path, "/")
+    if len(path) < 3 {
+        return
+    }
+    accountId := path[2]
+
+    var account Account
+    err := datastore.Get(c, accountKey(c, accountId), &account)
+
+    if err == datastore.ErrNoSuchEntity {
+        http.Error(w, err.Error(), http.StatusNotFound)
+        return;
+    }
+
+    // /account/{a_id} (element)
+    if len(path) == 3 {
+        // GET: public account info
+        // POST: update info, like screen name (login required)
+        return
+    }
+
+    // /account/{a_id}/challenges (collection)
+    if len(path) == 4 && path[3] == "challenges" {
+        c.Infof("challenges collection for %v", accountId)
+        // GET: list challenges
+        // POST: create new challenge
+        return
+    }
+}
+
+func getOrCreateAccount(c appengine.Context) (account Account, err error) {
     u := user.Current(c)
     if u == nil {
-        url, err := user.LoginURL(c, r.URL.String())
+        err = errors.New("Login required.")
+        return
+    }
+    email := u.Email
+    id := hash(u.ID)
+
+    key := accountKey(c, id)
+
+    err = datastore.Get(c, key, &account)
+
+    if err == datastore.ErrNoSuchEntity {
+        c.Infof("creating new user: %v %v", email, id)
+        account = Account {
+            Email: email,
+            ID: id,
+            RegDate: time.Now(),
+        }
+        _, err = datastore.Put(c, key, &account)
+    }
+    return
+}
+
+func accountKey(c appengine.Context, id string) *datastore.Key {
+    return datastore.NewKey(c, "Accounts", id, 0, nil)
+}
+
+func whoami(w http.ResponseWriter, r *http.Request) {
+    c := appengine.NewContext(r)
+    u := user.Current(c)
+
+    var ret LoginData
+    w.Header().Set("Content-type", "application/json")
+
+    if u == nil {
+        url, err := user.LoginURL(c, "")
         if err != nil {
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
         }
-        http.Redirect(w, r, url, http.StatusFound)
-        return
+        ret.LoginURL = url
+    } else {
+        url, err := user.LogoutURL(c, "")
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        ret.LogoutURL = url
+
+        account, err := getOrCreateAccount(c)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+        }
+        ret.Account = account
     }
-    url, err := user.LogoutURL(c, r.URL.String())
+
+    loginData, err := json.Marshal(ret)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
     }
-    d := HelloData {
-        Email: u.Email,
-        LogoutURL: url,
-    }
-
-    if err := rootTemplate.ExecuteTemplate(w, "hello", d); err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-    }
+    w.Write(loginData)
 }
 
-type HelloData struct {
-    Email string
+type LoginData struct {
+    Account Account
+    LoginURL string
     LogoutURL string
 }
 
-func validate(username string) error {
-  matches, err := regexp.Match("^[a-z][a-z0-9\\-]{2,29}$", []byte(username))
-  if err != nil {
-    return err
-  }
-  if !matches {
-    return errors.New("Username must be between 3 and 30 characters long, must start with a lowercase letter, and can only contain lowercase letters, numbers, and the '-' character.")
-  } 
-  return nil
+func hash(id string) string {
+    hasher := sha1.New()
+    io.WriteString(hasher, id)
+    io.WriteString(hasher, "salt it real good DbqOFzkk") // TODO: should come from environment
+    return base64.URLEncoding.EncodeToString(hasher.Sum(nil))[:8]
 }
 
-func create(w http.ResponseWriter, r *http.Request) {
-    //c := appengine.NewContext(r)
-    //u := user.Current(c)
-    username := r.FormValue("username")
-    err := validate(username)
-    if err != nil {
-      http.Error(w, err.Error(), http.StatusBadRequest)
-    }
-    http.Redirect(w, r, "/" + username, http.StatusFound)
-}
-
-var rootTemplate = template.Must(template.New("root").ParseFiles("tmpl/root"))
-
-//func (*Challenge) GetKey() *datastore.Key {
- //TODO   return datastore.NewKey(c, "Pullups", "andras_pullups", 0, nil)
-//}
