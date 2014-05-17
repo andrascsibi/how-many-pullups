@@ -10,7 +10,7 @@ handlers:
 - url: /(total|export|whoami)
   script: _go_app
 
-- url: /accounts/(.*)
+- url: /accounts(.*)
   script: _go_app
 
 - url: /app
