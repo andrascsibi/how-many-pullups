@@ -38,6 +38,10 @@ angular.module('pullApp', [
       controller:'AdminCtrl',
       templateUrl:'/app/views/admin/accounts.html'
     })
+    .when('/:id', {
+      controller:'BoardCtrl',
+      templateUrl:'/app/views/board.html'
+    })
     .otherwise({
       redirectTo:'/'
     });

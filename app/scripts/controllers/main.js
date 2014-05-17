@@ -47,7 +47,6 @@ angular.module('pullApp')
 
 .controller('AdminCtrl', ['$scope', '$resource', function($scope, $resource) {
   var Account = $resource("/accounts/:id", {id: '@id'}, {});
-  $scope.accounts = Account.query();
 
   $scope.selected = null;
 
@@ -71,21 +70,15 @@ angular.module('pullApp')
       $scope.selected.idx = idx;
     });
   };
+}])
+
+.controller('BoardCtrl', ['$scope', '$resource', '$routeParams', function($scope, $resource, $routeParams) {
+  var Account = $resource("/accounts/:id", {id: '@id'}, {});
+
+  Account.get({id: $routeParams.id}, function(data){
+    $scope.account = data;
+  });
 
 
-  // $scope.list = function(idx){
-  //   // Notice calls to Book are often given callbacks.
-  //   Book.query(function(data){
-  //     $scope.books = data;
-  //     if(idx != undefined) {
-  //       $scope.selected = $scope.books[idx];
-  //       $scope.selected.idx = idx;
-  //     }
-  //   }, function(error){
-  //     alert(error.data);
-  //   });
-  // };
-
-  // $scope.list();
 }]);
 
