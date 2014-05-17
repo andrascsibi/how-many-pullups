@@ -144,11 +144,10 @@ func getAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerEr
 }
 
 func updateAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	//messing up indentation
-	c := appengine.NewContext(r)
-	accountId := mux.Vars(r)["accountId"]
+        	c := appengine.NewContext(r)
+    	accountId := mux.Vars(r)["accountId"]
 	_ = c
-	fmt.Fprintf(w, "updating account %v\n", accountId)
+	   fmt.Fprintf(w, "updating account %v\n", accountId)
 	return nil, nil
 }
 
