@@ -10,10 +10,12 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"io"
+    "io/ioutil"
 	//    "errors"
 	// "strconv"
 	"fmt"
 	//    "regexp"
+
 
 	"appengine"
 	"appengine/datastore"
@@ -39,9 +41,11 @@ type Settings struct {
 }
 
 type Challenge struct {
+    ID           string
 	Title       string
 	Description string
 	Active      bool
+    CreationDate    time.Time
 }
 
 func init() {
@@ -126,20 +130,20 @@ func (fn handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func getAccounts(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
-    // TODO authorization
+	// TODO authorization
 	q := datastore.NewQuery("Accounts").Order("-RegDate")
-    as := make([]Account, 0)
-    _, err := q.GetAll(c, &as)
-    if err != nil {
-        return nil, &handlerError{err, "Error querying datastore", http.StatusInternalServerError}
-    }
+	as := make([]Account, 0)
+	_, err := q.GetAll(c, &as)
+	if err != nil {
+		return nil, &handlerError{err, "Error querying datastore", http.StatusInternalServerError}
+	}
 	return as, nil
 }
 
 func createAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	_ = c
-	fmt.Fprintf(w, "creating challenge for account\n")
+	// TODO - relationship with whoami
 	return nil, nil
 }
 
@@ -152,7 +156,9 @@ func getAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerEr
 
 	if err == datastore.ErrNoSuchEntity {
 		return nil, &handlerError{err, "Account not found", http.StatusNotFound}
-	}
+	} else if err != nil {
+        return nil, &handlerError{err, "Error getting account", http.StatusInternalServerError}
+    }
 
 	return account, nil
 }
@@ -168,17 +174,56 @@ func updateAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handle
 func getChallenges(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
-	_ = c
-	fmt.Fprintf(w, "listing challenges for account %v\n", accountId)
-	return nil, nil
+
+    // TODO: check account exists
+
+	// account, err := getAccount(w, r)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	q := datastore.NewQuery("Challenges").
+		Ancestor(accountKey(c, accountId)).
+		Order("CreationDate")
+	challenges := make([]Challenge, 0)
+	_, e := q.GetAll(c, &challenges)
+
+    if  e != nil {
+        return nil, &handlerError{e, "Error querying datastore", http.StatusInternalServerError}
+    }
+
+	return challenges, nil
 }
 
 func createChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
-	accountId := mux.Vars(r)["accountId"]
-	_ = c
-	fmt.Fprintf(w, "creating challenge for account %v\n", accountId)
-	return nil, nil
+
+    // TODO: authorization
+    // TODO: check account exists
+    accountId := mux.Vars(r)["accountId"]
+
+    data, e := ioutil.ReadAll(r.Body)
+    if e != nil {
+        return nil, &handlerError{e, "Could not read request", http.StatusBadRequest}
+    }
+
+    var challenge Challenge
+    e = json.Unmarshal(data, &challenge)
+    if e != nil {
+        return nil, &handlerError{e, "Could not parse JSON", http.StatusBadRequest}
+    }
+
+    challenge.Active = true
+    challenge.CreationDate = time.Now()
+    challenge.ID = hash(challenge.CreationDate.String());
+
+    key := challengeKey(c, accountId, challenge.ID)
+    _, e := datastore.Put(c, key, &challenge)
+    if e != nil {
+        return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
+    }
+
+	return challenge, nil
 }
 
 func getChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
@@ -244,7 +289,7 @@ func getOrCreateAccount(c appengine.Context) (account Account, err error) {
 		account = Account{
 			Email:   email,
 			ID:      id,
-            Admin:   u.Admin,
+			Admin:   u.Admin,
 			RegDate: time.Now(),
 		}
 		_, err = datastore.Put(c, key, &account)
@@ -253,7 +298,11 @@ func getOrCreateAccount(c appengine.Context) (account Account, err error) {
 }
 
 func accountKey(c appengine.Context, id string) *datastore.Key {
-	return datastore.NewKey(c, "Accounts", id, 0, nil)
+    return datastore.NewKey(c, "Accounts", id, 0, nil)
+}
+
+func challengeKey(c appengine.Context, accountId string, id string) *datastore.Key {
+    return datastore.NewKey(c, "Challenges", id, 0, accountKey(c, accountId))
 }
 
 func whoami(w http.ResponseWriter, r *http.Request) {
