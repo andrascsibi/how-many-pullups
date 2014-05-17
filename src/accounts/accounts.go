@@ -25,14 +25,16 @@ import (
 type Account struct {
 	Email      string
 	ID         string
-	ScreenName string
+	ScreenName string // TODO
 	Admin      bool
 	RegDate    time.Time
 
-	Challenges []string
-	Settings   Settings
+	Challenges []string // TODO
+	Settings   Settings // TODO
 }
 
+type Profile struct {
+}
 type Settings struct {
 }
 
@@ -46,12 +48,12 @@ func init() {
 	r := mux.NewRouter()
 	r.HandleFunc("/whoami", whoami)
 
-    r.Handle("/accounts",
-        handler(getAccounts)).
-        Methods("GET")
-    r.Handle("/accounts",
-        handler(createAccount)).
-        Methods("POST")
+	r.Handle("/accounts",
+		handler(getAccounts)).
+		Methods("GET")
+	r.Handle("/accounts",
+		handler(createAccount)).
+		Methods("POST")
 
 	r.Handle("/accounts/{accountId}",
 		handler(getAccount)).
@@ -123,23 +125,27 @@ func (fn handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func getAccounts(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-    c := appengine.NewContext(r)
-    _ = c
-    fmt.Fprintf(w, "getting all accounts\n")
-    return nil, nil
+	c := appengine.NewContext(r)
+    // TODO authorization
+	q := datastore.NewQuery("Accounts").Order("-RegDate")
+    as := make([]Account, 0)
+    _, err := q.GetAll(c, &as)
+    if err != nil {
+        return nil, &handlerError{err, "Error querying datastore", http.StatusInternalServerError}
+    }
+	return as, nil
 }
 
 func createAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-    c := appengine.NewContext(r)
-    _ = c
-    fmt.Fprintf(w, "creating challenge for account\n")
-    return nil, nil
+	c := appengine.NewContext(r)
+	_ = c
+	fmt.Fprintf(w, "creating challenge for account\n")
+	return nil, nil
 }
 
 func getAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
-	c.Infof("get account %v", accountId)
 
 	var account Account
 	err := datastore.Get(c, accountKey(c, accountId), &account)
@@ -148,9 +154,7 @@ func getAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerEr
 		return nil, &handlerError{err, "Account not found", http.StatusNotFound}
 	}
 
-	return Account{
-		Email: account.Email,
-	}, nil
+	return account, nil
 }
 
 func updateAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
@@ -240,6 +244,7 @@ func getOrCreateAccount(c appengine.Context) (account Account, err error) {
 		account = Account{
 			Email:   email,
 			ID:      id,
+            Admin:   u.Admin,
 			RegDate: time.Now(),
 		}
 		_, err = datastore.Put(c, key, &account)
