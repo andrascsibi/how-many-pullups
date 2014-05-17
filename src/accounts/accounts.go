@@ -46,50 +46,87 @@ func init() {
 	r := mux.NewRouter()
 	r.HandleFunc("/whoami", whoami)
 
-	r.HandleFunc("/accounts/",
-		createAccount).
+	r.Handle("/accounts/",
+		handler(createAccount)).
 		Methods("POST")
 
-	r.HandleFunc("/accounts/{accountId}",
-		getAccount).
+	r.Handle("/accounts/{accountId}",
+		handler(getAccount)).
 		Methods("GET")
-	r.HandleFunc("/accounts/{accountId}",
-		updateAccount).
+	r.Handle("/accounts/{accountId}",
+		handler(updateAccount)).
 		Methods("POST")
 
-	r.HandleFunc("/accounts/{accountId}/challenges",
-		getChallenges).
+	r.Handle("/accounts/{accountId}/challenges",
+		handler(getChallenges)).
 		Methods("GET")
-	r.HandleFunc("/accounts/{accountId}/challenges",
-		createChallenge).
+	r.Handle("/accounts/{accountId}/challenges",
+		handler(createChallenge)).
 		Methods("POST")
 
-	r.HandleFunc("/accounts/{accountId}/challenges/{challengeId}",
-		getChallenge).
+	r.Handle("/accounts/{accountId}/challenges/{challengeId}",
+		handler(getChallenge)).
 		Methods("GET")
-	r.HandleFunc("/accounts/{accountId}/challenges/{challengeId}",
-		updateChallenge).
+	r.Handle("/accounts/{accountId}/challenges/{challengeId}",
+		handler(updateChallenge)).
 		Methods("POST")
 
-	r.HandleFunc("/accounts/{accountId}/challenges/{challengeId}/sets",
-		getSets).
+	r.Handle("/accounts/{accountId}/challenges/{challengeId}/sets",
+		handler(getSets)).
 		Methods("GET")
-	r.HandleFunc("/accounts/{accountId}/challenges/{challengeId}/sets",
-		createSet).
+	r.Handle("/accounts/{accountId}/challenges/{challengeId}/sets",
+		handler(createSet)).
 		Methods("POST")
-	r.HandleFunc("/accounts/{accountId}/challenges/{challengeId}/sets",
-		importSets).
+	r.Handle("/accounts/{accountId}/challenges/{challengeId}/sets",
+		handler(importSets)).
 		Methods("PUT")
 
 	http.Handle("/", r)
 }
 
-func createAccount(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
-	c.Infof("creating account")
+type handlerError struct {
+	Error   error
+	Message string
+	Code    int
 }
 
-func getAccount(w http.ResponseWriter, r *http.Request) {
+type handler func(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError)
+
+// handler implements the http.Handler interface
+func (fn handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	c := appengine.NewContext(r)
+	response, err := fn(w, r)
+
+	if err != nil {
+		c.Errorf("%v", err.Error)
+		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Message), err.Code)
+		return
+	}
+	if response == nil {
+		c.Errorf("response from method is nil")
+		http.Error(w, "Internal server error. Check the logs.", http.StatusInternalServerError)
+		return
+	}
+
+	bytes, e := json.Marshal(response)
+	if e != nil {
+		http.Error(w, "Error marshalling JSON", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(bytes)
+}
+
+func createAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
+	c := appengine.NewContext(r)
+	_ = c
+	fmt.Fprintf(w, "creating challenge for account\n")
+	return nil, nil
+}
+
+func getAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 	c.Infof("get account %v", accountId)
@@ -98,80 +135,81 @@ func getAccount(w http.ResponseWriter, r *http.Request) {
 	err := datastore.Get(c, accountKey(c, accountId), &account)
 
 	if err == datastore.ErrNoSuchEntity {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
+		return nil, &handlerError{err, "Account not found", http.StatusNotFound}
 	}
 
-	w.Header().Set("Content-type", "application/json")
-
-	ret, err := json.Marshal(Account{
+	return Account{
 		Email: account.Email,
-	})
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	w.Write(ret)
+	}, nil
 }
 
-func updateAccount(w http.ResponseWriter, r *http.Request) {
+func updateAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 	_ = c
 	fmt.Fprintf(w, "updating account %v\n", accountId)
+	return nil, nil
 }
 
-func getChallenges(w http.ResponseWriter, r *http.Request) {
+func getChallenges(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 	_ = c
 	fmt.Fprintf(w, "listing challenges for account %v\n", accountId)
+	return nil, nil
 }
 
-func createChallenge(w http.ResponseWriter, r *http.Request) {
+func createChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 	_ = c
 	fmt.Fprintf(w, "creating challenge for account %v\n", accountId)
+	return nil, nil
 }
 
-func getChallenge(w http.ResponseWriter, r *http.Request) {
+func getChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 	_ = c
 	fmt.Fprintf(w, "listing challenge %v/%v\n", accountId, challengeId)
+	return nil, nil
 }
 
-func updateChallenge(w http.ResponseWriter, r *http.Request) {
+func updateChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 	_ = c
 	fmt.Fprintf(w, "updating challenge title/descr %v/%v\n", accountId, challengeId)
+	return nil, nil
 }
 
-func getSets(w http.ResponseWriter, r *http.Request) {
+func getSets(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 	_ = c
 	fmt.Fprintf(w, "getting sets of %v/%v\n", accountId, challengeId)
+	return nil, nil
 }
 
-func createSet(w http.ResponseWriter, r *http.Request) {
+func createSet(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 	_ = c
 	fmt.Fprintf(w, "creating set for %v/%v\n", accountId, challengeId)
+	return nil, nil
 }
 
-func importSets(w http.ResponseWriter, r *http.Request) {
+func importSets(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 	_ = c
 	fmt.Fprintf(w, "importing sets to %v/%v\n", accountId, challengeId)
+	return nil, nil
 }
 
 func getOrCreateAccount(c appengine.Context) (account Account, err error) {
