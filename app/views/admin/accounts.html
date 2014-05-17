@@ -1,0 +1,36 @@
+  <div class="jumbotron">
+    <button class="btn btn-primary pull-right" ng-click="add()">
+      <i class="fa fa-plus"></i> Add account
+    </button>
+    <h1>Accounts</h1>
+  </div>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-3 well">
+        <h3>Accounts</h3>
+        <ul class="nav nav-pills nav-stacked">
+          <li ng-class="{active: a.Email == selected.Email}" ng-repeat="a in accounts">
+            <a href="" ng-click="get($index)">{{a.Email}}</a>
+          </li>
+        </ul>
+      </div>
+      <div class="col-sm-6" ng-show="selected">
+        <h2>{{selected.Email}}</h2>
+        <dl class="dl-horizontal">
+          <dt>ID:</dt>
+          <dd>{{selected.ID}}</dd>
+          <dt>Registration date:</dt>
+          <dd>{{selected.RegDate | date }}</dd>
+        </dl>
+      </div>
+      <div class="col-sm-3" ng-show="selected">
+        <button class="btn btn-primary form-control" ng-click="update(selected.idx)">
+          <i class="fa fa-pencil"></i> Update this account
+        </button>
+        <button class="btn btn-danger form-control" ng-click="remove(selected.idx)">
+          <i class="fa fa-trash-o"></i> Remove this account
+        </button>
+      </div>
+    </div>
+  </div>
+
