@@ -46,9 +46,12 @@ func init() {
 	r := mux.NewRouter()
 	r.HandleFunc("/whoami", whoami)
 
-	r.Handle("/accounts/",
-		handler(createAccount)).
-		Methods("POST")
+    r.Handle("/accounts",
+        handler(getAccounts)).
+        Methods("GET")
+    r.Handle("/accounts",
+        handler(createAccount)).
+        Methods("POST")
 
 	r.Handle("/accounts/{accountId}",
 		handler(getAccount)).
@@ -119,11 +122,18 @@ func (fn handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write(bytes)
 }
 
+func getAccounts(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
+    c := appengine.NewContext(r)
+    _ = c
+    fmt.Fprintf(w, "getting all accounts\n")
+    return nil, nil
+}
+
 func createAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
-	_ = c
-	fmt.Fprintf(w, "creating challenge for account\n")
-	return nil, nil
+    c := appengine.NewContext(r)
+    _ = c
+    fmt.Fprintf(w, "creating challenge for account\n")
+    return nil, nil
 }
 
 func getAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
@@ -144,10 +154,10 @@ func getAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerEr
 }
 
 func updateAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-        	c := appengine.NewContext(r)
-    	accountId := mux.Vars(r)["accountId"]
+	c := appengine.NewContext(r)
+	accountId := mux.Vars(r)["accountId"]
 	_ = c
-	   fmt.Fprintf(w, "updating account %v\n", accountId)
+	fmt.Fprintf(w, "updating account %v\n", accountId)
 	return nil, nil
 }
 
