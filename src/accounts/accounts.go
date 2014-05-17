@@ -2,6 +2,9 @@ package accounts
 
 import (
     "net/http"
+
+    "github.com/gorilla/mux"
+
     "time"
 
     "crypto/sha1"
@@ -18,6 +21,7 @@ import (
     "appengine/user"
     "encoding/json"
     "appengine/datastore"
+
 )
 
 type Account struct {
@@ -42,8 +46,10 @@ type Challenge struct {
 }
 
 func init() {
-    http.HandleFunc("/whoami", whoami)
-    http.HandleFunc("/accounts/", accounts)
+    r := mux.NewRouter()
+    r.HandleFunc("/whoami", whoami)
+    r.HandleFunc("/accounts/", account)
+    http.Handle("/", r)
 }
 
 func accounts(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +82,22 @@ func accounts(w http.ResponseWriter, r *http.Request) {
         // POST: create new challenge
         return
     }
+
+    // /accounts/{id}/challenges/{c_id} (element)
+    if len(path) == 5 && path[3] == "challenges" {
+        // GET: title, description
+        // POST: update title/description
+        return
+    }
+
+    // /accounts/{id}/challenges/{c_id}/sets (collection)
+    if len(path) == 6 && path[3] == "challenges" && path[5] == "sets" {
+        // GET: list of all sets (export)
+        // POST: create new set (param: reps)
+        // PUT: replace whole collection (import)
+        return
+    }
+
 }
 
 func getOrCreateAccount(c appengine.Context) (account Account, err error) {
