@@ -198,7 +198,7 @@ func createChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *hand
 	c := appengine.NewContext(r)
 
 	// TODO: authorization
-	// TODO: check account exists
+	   // TODO: check account exists
 	accountId := mux.Vars(r)["accountId"]
 
 	data, e := ioutil.ReadAll(r.Body)
