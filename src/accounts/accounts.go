@@ -48,7 +48,7 @@ type Challenge struct {
 func init() {
     r := mux.NewRouter()
     r.HandleFunc("/whoami", whoami)
-    r.HandleFunc("/accounts/", account)
+    r.HandleFunc("/accounts/", accounts)
     http.Handle("/", r)
 }
 
