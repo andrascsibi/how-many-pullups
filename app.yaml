@@ -16,8 +16,9 @@ handlers:
 - url: /app
   static_dir: app
 
-- url: /(.*)
-  static_dir: app
+- url: /admin/(.*)
+  static_files: app/index.html
+  upload: app/(.*)
 
 - url: /(.*)
   static_files: app/index.html

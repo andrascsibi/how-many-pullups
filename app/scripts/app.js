@@ -1,5 +1,6 @@
 angular.module('pullApp', [
-  'ngRoute'
+  'ngRoute',
+  'ngResource',
 ])
 
 .factory('ValidatorService', ['$q', '$http', '$route', 'baseUrl', function($q, $http, $route, baseUrl) {
@@ -33,9 +34,9 @@ angular.module('pullApp', [
       controller:'TotalCtrl',
       templateUrl:'/app/views/jumbocounter.html'
     })
-    .when('/admin', {
-       controller:'TotalCtrl',
-       templateUrl:'/app/views/admin.html'
+    .when('/admin/accounts', {
+      controller:'AdminCtrl',
+      templateUrl:'/app/views/admin/accounts.html'
     })
     .otherwise({
       redirectTo:'/'

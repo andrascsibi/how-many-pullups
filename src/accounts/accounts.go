@@ -230,16 +230,16 @@ func getChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *handler
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
-    var challenge Challenge
-    err := datastore.Get(c, challengeKey(c, accountId, challengeId), &challenge)
+	var challenge Challenge
+	err := datastore.Get(c, challengeKey(c, accountId, challengeId), &challenge)
 
-    if err == datastore.ErrNoSuchEntity {
-        return nil, &handlerError{err, "Challenge not found", http.StatusNotFound}
-    } else if err != nil {
-        return nil, &handlerError{err, "Error accessing datastore", http.StatusInternalServerError}
-    }
+	if err == datastore.ErrNoSuchEntity {
+		return nil, &handlerError{err, "Challenge not found", http.StatusNotFound}
+	} else if err != nil {
+		return nil, &handlerError{err, "Error accessing datastore", http.StatusInternalServerError}
+	}
 
-    return challenge, nil
+	return challenge, nil
 }
 
 func updateChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {

@@ -33,7 +33,7 @@ angular.module('pullApp')
 }])
 
 
-.controller('HomePageCtrl', ['$scope', '$http', '$location', function($scope, $http, $location){
+.controller('HomePageCtrl', ['$scope', '$http', '$location', '$resource', function($scope, $http, $location, $resource){
   $http.get('whoami').
   success(function(data, status, headers, config) {
     console.log(status);
@@ -43,5 +43,24 @@ angular.module('pullApp')
     console.log("request failed");
   });
 
+}])
+
+.controller('AdminCtrl', ['$scope', '$resource', function($scope, $resource) {
+  var Account = $resource("/accounts/:id", {id: '@id'}, {});
+  $scope.accounts = Account.query();
+  // $scope.list = function(idx){
+  //   // Notice calls to Book are often given callbacks.
+  //   Book.query(function(data){
+  //     $scope.books = data;
+  //     if(idx != undefined) {
+  //       $scope.selected = $scope.books[idx];
+  //       $scope.selected.idx = idx;
+  //     }
+  //   }, function(error){
+  //     alert(error.data);
+  //   });
+  // };
+
+  // $scope.list();
 }]);
 
