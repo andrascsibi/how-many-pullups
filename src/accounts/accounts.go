@@ -48,7 +48,7 @@ type Challenge struct {
 
 func init() {
 	r := mux.NewRouter()
-	r.HandleFunc("/whoami", whoami)
+	r.Handle("/whoami", handler(whoami)).Methods("GET")
 
 	r.Handle("/accounts",
 		handler(getAccounts)).
@@ -329,32 +329,6 @@ func importSets(w http.ResponseWriter, r *http.Request) (interface{}, *handlerEr
 	return nil, nil
 }
 
-func getOrCreateAccount(c appengine.Context) (account Account, err error) {
-	u := user.Current(c)
-	if u == nil {
-		err = errors.New("Login required.")
-		return
-	}
-	email := u.Email
-	id := hash(u.ID)
-
-	key := accountKey(c, id)
-
-	err = datastore.Get(c, key, &account)
-
-	if err == datastore.ErrNoSuchEntity {
-		c.Infof("creating new user: %v %v", email, id)
-		account = Account{
-			Email:   email,
-			ID:      id,
-			Admin:   u.Admin,
-			RegDate: time.Now(),
-		}
-		_, err = datastore.Put(c, key, &account)
-	}
-	return
-}
-
 func accountKey(c appengine.Context, id string) *datastore.Key {
 	return datastore.NewKey(c, "Accounts", id, 0, nil)
 }
@@ -363,49 +337,53 @@ func challengeKey(c appengine.Context, accountId string, id string) *datastore.K
 	return datastore.NewKey(c, "Challenges", id, 0, accountKey(c, accountId))
 }
 
-func whoami(w http.ResponseWriter, r *http.Request) {
+func getAccountByEmail(c appengine.Context, email string) (Account, error){
+	q := datastore.NewQuery("Accounts").Filter("Email =", email)
+
+	var accounts []Account
+  _, err := q.GetAll(c, &accounts)
+  if err != nil {
+    return Account{}, err
+  }
+  switch len(accounts) {
+    case 0: return Account{}, nil
+    case 1: return accounts[0], nil
+    default: return Account{}, errors.New(fmt.Sprintf("More than one accounts found with email %v", email))
+  }
+}
+
+func whoami(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
+
 	c := appengine.NewContext(r)
 	u := user.Current(c)
 
-	var ret LoginData
-	w.Header().Set("Content-type", "application/json")
-
-  // not signed in
-  // signed in, not in db
-  // signed in, in db
-  //
-
 	if u == nil {
-		url, err := user.LoginURL(c, "")
+		url, err := user.LoginURL(c, "") // TODO: redirect?
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return nil, &handlerError{err, "Error getting login URL", http.StatusInternalServerError}
 		}
-		ret.LoginURL = url
-	} else {
-		url, err := user.LogoutURL(c, "")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		ret.LogoutURL = url
-
-		account, err := getOrCreateAccount(c)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		ret.Account = account
+		return LoginData{LoginURL: url}, nil
 	}
 
-	loginData, err := json.Marshal(ret)
+	url, err := user.LogoutURL(c, "")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil, &handlerError{err, "Error getting logout URL", http.StatusInternalServerError}
 	}
-	w.Write(loginData)
+
+	account, err := getAccountByEmail(c, u.Email)
+	if err != nil {
+		return nil, &handlerError{err, "Error while getting account", http.StatusInternalServerError}
+	}
+	if len(account.ID) == 0 { // Nicer way of checkig existence
+		return LoginData{LogoutURL: url, Unregistered: true, Account: Account{Email:u.Email}}, nil
+	}
+
+	return LoginData{LogoutURL: url, Account: account}, nil
 }
 
 type LoginData struct {
 	Account   Account
+	Unregistered bool
 	LoginURL  string
 	LogoutURL string
 }
