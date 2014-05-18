@@ -27,20 +27,14 @@ angular.module('pullApp', [
   $routeProvider
     .when('/', {
       templateUrl:'/app/views/index.html',
-      controller: 'NavbarCtrl',
-      resolve: {
-        whoami : function(WhoamiService) {
-          return WhoamiService();
-        },
-      },
     })
     .when('/admin/accounts', {
       controller:'AdminCtrl',
-      templateUrl:'/app/views/admin/accounts.html'
+      templateUrl:'/app/views/admin/accounts.html',
     })
     .when('/:id', {
       controller:'BoardCtrl',
-      templateUrl:'/app/views/board.html'
+      templateUrl:'/app/views/board.html',
     })
     .otherwise({
       redirectTo:'/'

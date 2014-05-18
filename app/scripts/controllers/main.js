@@ -32,21 +32,26 @@ angular.module('pullApp')
 //   });
 // }])
 
-.controller('WhoamiCtrl', ['$scope', '$http', '$modal', '$resource', '$location', function($scope, $http, $modal, $resource, $location){
-  $http.get('whoami').
-  success(function(data, status, headers, config) {
-    $scope.whoami = data;
-  }).
-  error(function(data, status, headers, config) {
-    console.log("request failed");
+// .controller('WhoamiCtrl', ['$scope', '$http', '$modal', '$resource', '$location', function($scope, $http, $modal, $resource, $location){
+//   $http.get('whoami').
+//   success(function(data, status, headers, config) {
+//     $scope.whoami = data;
+//   }).
+//   error(function(data, status, headers, config) {
+//     console.log("request failed");
+//   });
+// }])
+
+.controller('NavbarCtrl', ['$scope', '$http', '$modal', '$resource', '$location', 'WhoamiService', function($scope, $http, $modal, $resource, $location, WhoamiService){
+
+  WhoamiService().then(function(whoami) {
+    $scope.whoami = whoami;
+
+    if ($scope.whoami.Unregistered) {
+      console.log("showing modal");
+      $scope.showRegModal();
+    }
   });
-}])
-
-.controller('NavbarCtrl', ['$scope', '$http', '$modal', '$resource', '$location', function($scope, $http, $modal, $resource, $location){
-
-  if ($scope.whoami.Unregistered) {
-    $scope.showRegModal();
-  }
 
   var regModal = $modal({scope: $scope, template: 'app/views/registration.html', show: false});
   $scope.showRegModal = function() {
@@ -69,7 +74,6 @@ angular.module('pullApp')
       $scope.working = false;
       $scope.error = err.data;
     });
-
   };
 
 }])
@@ -101,8 +105,11 @@ angular.module('pullApp')
   };
 }])
 
-.controller('BoardCtrl', ['$scope', '$resource', '$routeParams', function($scope, $resource, $routeParams) {
+.controller('BoardCtrl', ['$scope', '$resource', '$routeParams', 'WhoamiService', function($scope, $resource, $routeParams, WhoamiService) {
   var Account = $resource("/accounts/:id", {id: '@id'}, {});
+  WhoamiService().then(function(whoami) {
+    $scope.whoami = whoami;
+  });
 
   Account.get({id: $routeParams.id}, function(data){
     $scope.account = data;
