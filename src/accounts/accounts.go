@@ -26,11 +26,11 @@ type Account struct {
 	Email      string
 	ID         string
 	ScreenName string
-	Admin      bool
+	Admin      bool // TODO retire
 	RegDate    time.Time
 
-	Challenges []string // TODO
-	Settings   Settings // TODO
+	Challenges []string // TODO retire
+	Settings   Settings // TODO retire
 }
 
 type Profile struct {
@@ -39,10 +39,11 @@ type Settings struct {
 }
 
 type Challenge struct {
-	ID           string
-	Title        string
-	Description  string
-	Active       bool
+	ID          string
+	Title       string
+	Description string
+	Active      bool // TODO don't need this yet
+	// TODO Public       bool
 	CreationDate time.Time
 }
 
@@ -146,38 +147,45 @@ func createAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handle
 		return nil, &handlerError{e, "Could not read request", http.StatusBadRequest}
 	}
 
-	var account Account
-	e = json.Unmarshal(data, &account)
+	var newAccount Account
+	e = json.Unmarshal(data, &newAccount)
 	if e != nil {
 		return nil, &handlerError{e, "Could not parse JSON", http.StatusBadRequest}
 	}
 
-	// u := user.Current(c)
-	// if u == nil {
-	// 	return nil, &handlerError{e, "Login requried", http.StatusForbidden}
-	// }
-	// if u.Email != account.Email && u.Admin {
-	// 	return nil, &handlerError{e, "Unauthorized", http.StatusUnauthorized}
-	// }
+	u := user.Current(c)
+	if u == nil {
+		return nil, &handlerError{e, "Login requried", http.StatusForbidden}
+	}
+	if u.Email != newAccount.Email && u.Admin {
+		return nil, &handlerError{e, "Unauthorized", http.StatusUnauthorized}
+	}
 
-	if e = validate(account.ID); e != nil {
+	accByEmail, err := getAccountByEmail(c, newAccount.Email)
+	if err != nil {
+		return nil, &handlerError{e, "Error getting account by email", http.StatusInternalServerError}
+	}
+	if accByEmail != nil {
+		return nil, &handlerError{e, "An account is already registered for this email", http.StatusConflict}
+	}
+
+	if e = validate(newAccount.ID); e != nil {
 		return nil, &handlerError{e, "Invalid user name", http.StatusBadRequest}
 	}
 
-	key := accountKey(c, account.ID)
+	key := accountKey(c, newAccount.ID)
 
 	var accInDb Account
-	err := datastore.Get(c, key, &accInDb)
+	err = datastore.Get(c, key, &accInDb)
 
 	if err == datastore.ErrNoSuchEntity {
-		c.Infof("creating new user: %v %v", account.Email, account.ID)
-		account.RegDate = time.Now()
-		//		account.Admin = u.Admin
-		_, err = datastore.Put(c, key, &account)
+		c.Infof("creating new user: %v %v", newAccount.Email, newAccount.ID)
+		newAccount.RegDate = time.Now()
+		_, err = datastore.Put(c, key, &newAccount)
 		if err != nil {
 			return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
 		}
-		return account, nil
+		return newAccount, nil
 	}
 	if err != nil {
 		return nil, &handlerError{e, "Error accessing datastore", http.StatusInternalServerError}
@@ -337,21 +345,22 @@ func challengeKey(c appengine.Context, accountId string, id string) *datastore.K
 	return datastore.NewKey(c, "Challenges", id, 0, accountKey(c, accountId))
 }
 
-func getAccountByEmail(c appengine.Context, email string) (Account, error) {
+func getAccountByEmail(c appengine.Context, email string) (*Account, error) {
 	q := datastore.NewQuery("Accounts").Filter("Email =", email)
 
 	var accounts []Account
 	_, err := q.GetAll(c, &accounts)
 	if err != nil {
-		return Account{}, err
+		c.Errorf(err.Error())
+		return nil, err
 	}
 	switch len(accounts) {
 	case 0:
-		return Account{}, nil
+		return nil, nil
 	case 1:
-		return accounts[0], nil
+		return &accounts[0], nil
 	default:
-		return Account{}, errors.New(fmt.Sprintf("More than one accounts found with email %v", email))
+		return nil, errors.New(fmt.Sprintf("More than one accounts found with email %v", email))
 	}
 }
 
@@ -377,11 +386,11 @@ func whoami(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError)
 	if err != nil {
 		return nil, &handlerError{err, "Error while getting account", http.StatusInternalServerError}
 	}
-	if len(account.ID) == 0 { // Nicer way of checkig existence
+	if account == nil {
 		return LoginData{LogoutURL: url, Unregistered: true, Account: Account{Email: u.Email}}, nil
 	}
 
-	return LoginData{LogoutURL: url, Account: account}, nil
+	return LoginData{LogoutURL: url, Account: *account}, nil
 }
 
 type LoginData struct {

@@ -12,7 +12,7 @@
             <input class="form-control" type="text" ng-model="whoami.Account.ID" placeholder="Username" required autofocus/>
             <p class="help-block">Your challange board will be at <code>http://pull-app.appspot.com/{{whoami.Account.ID}}</code></p>
           </div>
-          <button type="submit" class="btn btn-primary" ng-click="createAccount()">Create my board</button>
+          <button type="submit" class="btn btn-primary" ng-click="createAccount(whoami.Account)">Create my board</button>
         </form>
       </div>
 

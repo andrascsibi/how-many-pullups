@@ -15,8 +15,8 @@
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav navbar-right">
 
-        <li class="navbar-text" ng-if="whoami.Unregistered">
-          Unregistered account
+        <li class="navbar-text" ng-if="whoami.Unregistered" ng-click="showRegModal()">
+            Unregistered account
         </li>
 
         <li ng-if="whoami.Account.Email">
