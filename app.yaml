@@ -16,6 +16,9 @@ handlers:
 - url: /app
   static_dir: app
 
+- url: /bower_components
+  static_dir: bower_components
+
 - url: /(.*)
   static_files: app/index.html
   upload: app/(.*)

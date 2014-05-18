@@ -24,7 +24,10 @@
           <a href="{{whoami.LogoutURL}}" target="_self" class="navbar-link">Sign out</a>
         </li>
         <li ng-if="whoami.LoginURL">
-          <a href="{{whoami.LoginURL}}" target="_self" class="navbar-link">Sign in</a>
+
+<button type="button" class="btn btn-default navbar-btn" data-template="app/views/signin.html" data-animation="am-flip-x" data-placement="bottom" bs-popover>Sign in</button>
+
+
         </li>
 
       </ul>

@@ -13,7 +13,7 @@ import (
 	"io/ioutil"
 	// "strconv"
 	"fmt"
-	    "regexp"
+	"regexp"
 
 	"appengine"
 	"appengine/datastore"
@@ -166,35 +166,35 @@ func createAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handle
 
 	key := accountKey(c, account.ID)
 
-  var accInDb Account
+	var accInDb Account
 	err := datastore.Get(c, key, &accInDb)
 
-  if err == datastore.ErrNoSuchEntity {
+	if err == datastore.ErrNoSuchEntity {
 		c.Infof("creating new user: %v %v", account.Email, account.ID)
 		account.RegDate = time.Now()
-//		account.Admin = u.Admin
+		//		account.Admin = u.Admin
 		_, err = datastore.Put(c, key, &account)
 		if err != nil {
-  		return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
+			return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
 		}
 		return account, nil
 	}
-  if err != nil {
- 		return nil, &handlerError{e, "Error accessing datastore", http.StatusInternalServerError}
-  }
+	if err != nil {
+		return nil, &handlerError{e, "Error accessing datastore", http.StatusInternalServerError}
+	}
 
- 	return nil, &handlerError{e, "User already exists", http.StatusConflict}
+	return nil, &handlerError{e, "User already exists", http.StatusConflict}
 }
 
 func validate(username string) error {
-  matches, err := regexp.Match("^[a-z][a-z0-9\\-]{2,29}$", []byte(username))
-  if err != nil {
-    return err
-  }
-  if !matches {
-    return errors.New("Username must be between 3 and 30 characters long, must start with a lowercase letter, and can only contain lowercase letters, numbers, and the '-' character.")
-  }
-  return nil
+	matches, err := regexp.Match("^[a-z][a-z0-9\\-]{2,29}$", []byte(username))
+	if err != nil {
+		return err
+	}
+	if !matches {
+		return errors.New("Username must be between 3 and 30 characters long, must start with a lowercase letter, and can only contain lowercase letters, numbers, and the '-' character.")
+	}
+	return nil
 }
 
 func getAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
@@ -369,6 +369,11 @@ func whoami(w http.ResponseWriter, r *http.Request) {
 
 	var ret LoginData
 	w.Header().Set("Content-type", "application/json")
+
+  // not signed in
+  // signed in, not in db
+  // signed in, in db
+  //
 
 	if u == nil {
 		url, err := user.LoginURL(c, "")

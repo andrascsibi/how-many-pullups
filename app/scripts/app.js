@@ -1,6 +1,7 @@
 angular.module('pullApp', [
   'ngRoute',
   'ngResource',
+  'mgcrea.ngStrap',
 ])
 
 .factory('ValidatorService', ['$q', '$http', '$route', 'baseUrl', function($q, $http, $route, baseUrl) {
