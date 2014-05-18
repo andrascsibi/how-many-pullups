@@ -1,0 +1,21 @@
+<div class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" ng-click="$hide()">&times;</button>
+        <h4 class="modal-title">Hello, {{whoami.Account.Email}}!</h4>
+      </div>
+      <div class="modal-body">
+        <p>We're almost there. Just choose a user name</p>
+        <form role="form">
+          <div class="form-group">
+            <input class="form-control" type="text" ng-model="whoami.Account.ID" placeholder="Username" required autofocus/>
+            <p class="help-block">Your challange board will be at <code>http://pull-app.appspot.com/{{whoami.Account.ID}}</code></p>
+          </div>
+          <button type="submit" class="btn btn-primary" ng-click="createAccount()">Create my board</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>

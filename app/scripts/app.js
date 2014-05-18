@@ -28,13 +28,12 @@ angular.module('pullApp', [
 
   $routeProvider
     .when('/', {
-      controller:'HomePageCtrl',
       templateUrl:'/app/views/index.html'
     })
-    .when('/andris', {
-      controller:'TotalCtrl',
-      templateUrl:'/app/views/jumbocounter.html'
-    })
+    // .when('/andris', {
+    //   controller:'TotalCtrl',
+    //   templateUrl:'/app/views/jumbocounter.html'
+    // })
     .when('/admin/accounts', {
       controller:'AdminCtrl',
       templateUrl:'/app/views/admin/accounts.html'

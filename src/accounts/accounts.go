@@ -337,19 +337,22 @@ func challengeKey(c appengine.Context, accountId string, id string) *datastore.K
 	return datastore.NewKey(c, "Challenges", id, 0, accountKey(c, accountId))
 }
 
-func getAccountByEmail(c appengine.Context, email string) (Account, error){
+func getAccountByEmail(c appengine.Context, email string) (Account, error) {
 	q := datastore.NewQuery("Accounts").Filter("Email =", email)
 
 	var accounts []Account
-  _, err := q.GetAll(c, &accounts)
-  if err != nil {
-    return Account{}, err
-  }
-  switch len(accounts) {
-    case 0: return Account{}, nil
-    case 1: return accounts[0], nil
-    default: return Account{}, errors.New(fmt.Sprintf("More than one accounts found with email %v", email))
-  }
+	_, err := q.GetAll(c, &accounts)
+	if err != nil {
+		return Account{}, err
+	}
+	switch len(accounts) {
+	case 0:
+		return Account{}, nil
+	case 1:
+		return accounts[0], nil
+	default:
+		return Account{}, errors.New(fmt.Sprintf("More than one accounts found with email %v", email))
+	}
 }
 
 func whoami(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
@@ -375,17 +378,17 @@ func whoami(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError)
 		return nil, &handlerError{err, "Error while getting account", http.StatusInternalServerError}
 	}
 	if len(account.ID) == 0 { // Nicer way of checkig existence
-		return LoginData{LogoutURL: url, Unregistered: true, Account: Account{Email:u.Email}}, nil
+		return LoginData{LogoutURL: url, Unregistered: true, Account: Account{Email: u.Email}}, nil
 	}
 
 	return LoginData{LogoutURL: url, Account: account}, nil
 }
 
 type LoginData struct {
-	Account   Account
+	Account      Account
 	Unregistered bool
-	LoginURL  string
-	LogoutURL string
+	LoginURL     string
+	LogoutURL    string
 }
 
 func hash(id string) string {

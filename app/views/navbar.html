@@ -1,4 +1,4 @@
-<nav class="navbar navbar-default" role="navigation" ng-controller="HomePageCtrl">
+<nav class="navbar navbar-default" role="navigation" ng-controller="NavbarCtrl">
   <div class="container-fluid">
     <!-- Brand and toggle get grouped for better mobile display -->
     <div class="navbar-header">
@@ -15,6 +15,10 @@
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav navbar-right">
 
+        <li class="navbar-text" ng-if="whoami.Unregistered">
+          Unregistered account
+        </li>
+
         <li ng-if="whoami.Account.Email">
           <p class="navbar-text navbar-right">
             Signed in as <a href="#" class="navbar-link">{{whoami.Account.Email}}</a>
@@ -24,10 +28,7 @@
           <a href="{{whoami.LogoutURL}}" target="_self" class="navbar-link">Sign out</a>
         </li>
         <li ng-if="whoami.LoginURL">
-
-<button type="button" class="btn btn-default navbar-btn" data-template="app/views/signin.html" data-animation="am-flip-x" data-placement="bottom" bs-popover>Sign in</button>
-
-
+          <a href="{{whoami.LoginURL}}" target="_self" class="navbar-link">Sign in</a>
         </li>
 
       </ul>
