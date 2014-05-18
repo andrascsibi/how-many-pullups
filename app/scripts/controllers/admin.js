@@ -1,8 +1,6 @@
 angular.module('pullApp')
 
-.controller('AdminCtrl', ['$scope', '$resource', function($scope, $resource) {
-  var Account = $resource("/accounts/:id", {id: '@id'}, {});
-
+.controller('AdminCtrl', ['$scope', 'Account', function($scope, Account) {
   $scope.selected = null;
 
   $scope.list = function(idx){
@@ -13,7 +11,7 @@ angular.module('pullApp')
         $scope.selected.idx = idx;
       }
     }, function(error){
-      alert(error.data);
+      alert(error.data.error); // TODO
     });
   };
 

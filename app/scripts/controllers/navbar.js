@@ -1,7 +1,7 @@
 angular.module('pullApp')
 
-.controller('NavbarCtrl', ['$scope', '$http', '$modal', '$resource', '$location', 'WhoamiService',
-  function($scope, $http, $modal, $resource, $location, WhoamiService){
+.controller('NavbarCtrl', ['$scope', '$http', '$modal', 'Account', '$location', 'WhoamiService',
+  function($scope, $http, $modal, Account, $location, WhoamiService){
 
   WhoamiService().then(function(whoami) {
     $scope.whoami = whoami;
@@ -18,7 +18,7 @@ angular.module('pullApp')
   };
 
   $scope.createAccount = function(account) {
-    var Account = $resource("/accounts/:id", {id: '@id'}, {});
+//    var Account = $resource("/accounts/:id", {id: '@id'}, {});
     var newAccount = new Account();
     newAccount.Email = account.Email;
     newAccount.ID = account.ID;

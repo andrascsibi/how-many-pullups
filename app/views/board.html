@@ -8,5 +8,16 @@
 
   <p>id: {{account.ID}}</p>
   <p>Reg date: {{account.RegDate | date}}</p>
+  <h4>Challenges</h4>
+  <div class="well" ng-repeat="c in challenges">
+    {{c.Title}}
+    date: {{c.CreationDate | date}}
+  </div>
+
+  <button ng-if="owner" class="btn btn-primary" ng-click="add()">
+    <i class="fa fa-plus"></i> Add challenge
+  </button>
+
+
 </div>
 
