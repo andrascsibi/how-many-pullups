@@ -42,8 +42,10 @@ type Challenge struct {
 	ID          string
 	Title       string
 	Description string
-	Active      bool // TODO don't need this yet
-	// TODO Public       bool
+	// Finished      bool
+	// Public       bool
+	// TrainingSet   int
+	// MaxReps      int
 	CreationDate time.Time
 }
 
@@ -130,7 +132,7 @@ func (fn handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func getAccounts(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	// TODO authorization
-	q := datastore.NewQuery("Accounts").Order("-RegDate")
+	q := datastore.NewQuery("Accounts").Order("-RegDate").Limit(100)
 	as := make([]Account, 0)
 	_, err := q.GetAll(c, &as)
 	if err != nil {
@@ -271,7 +273,6 @@ func createChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *hand
 		return nil, &handlerError{e, "Could not parse JSON", http.StatusBadRequest}
 	}
 
-	challenge.Active = true
 	challenge.CreationDate = time.Now()
 	challenge.ID = hash(challenge.CreationDate.String())
 

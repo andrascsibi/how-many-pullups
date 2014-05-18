@@ -4,6 +4,8 @@ angular.module('pullApp')
   var Account = $resource("/accounts/:id", {id: '@id'}, {});
   WhoamiService().then(function(whoami) {
     $scope.whoami = whoami;
+    $scope.owner = $routeParams.id === whoami.Account.ID;
+
   });
 
   Account.get({id: $routeParams.id}, function(data){
