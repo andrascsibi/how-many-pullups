@@ -4,17 +4,15 @@ angular.module('pullApp', [
   'mgcrea.ngStrap',
 ])
 
-.factory('ValidatorService', ['$q', '$http', '$route', 'baseUrl', function($q, $http, $route, baseUrl) {
+.factory('WhoamiService', ['$q', '$http', '$route', function($q, $http, $route) {
   return function() {
     var delay = $q.defer();
-    var promise = ($route.current.params.jsonFile) ?
-      $http.get($route.current.params.jsonFile) :
-      $http.jsonp(baseUrl + '?callback=JSON_CALLBACK');
+    var promise = $http.get('/whoami');
     promise.success(function(data, status, headers, config) {
       delay.resolve(data);
     }).
     error(function(data, status, headers, config) {
-      delay.reject('Unable to fetch validator data');
+      delay.reject('Could not fetch whoami');
     });
     return delay.promise;
   };
@@ -28,12 +26,14 @@ angular.module('pullApp', [
 
   $routeProvider
     .when('/', {
-      templateUrl:'/app/views/index.html'
+      templateUrl:'/app/views/index.html',
+      controller: 'NavbarCtrl',
+      resolve: {
+        whoami : function(WhoamiService) {
+          return WhoamiService();
+        },
+      },
     })
-    // .when('/andris', {
-    //   controller:'TotalCtrl',
-    //   templateUrl:'/app/views/jumbocounter.html'
-    // })
     .when('/admin/accounts', {
       controller:'AdminCtrl',
       templateUrl:'/app/views/admin/accounts.html'

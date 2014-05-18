@@ -1,7 +1,10 @@
 <div ng-include src="'/app/views/navbar.html'"></div>
 
-<h3>{{account.Email}}'s Board</h3>
+<div ng-if="notFound" class="alert alert-warning">Sorry, we couldn't find that page.</div>
 
-<p>Yo id: {{account.ID}}</p>
+<h3>{{account.ID}}'s Board</h3>
+
+<p>id: {{account.ID}}</p>
+<p>email: {{account.Email}}</p>
 <p>Reg date: {{account.RegDate | date}}</p>
 

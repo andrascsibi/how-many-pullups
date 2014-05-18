@@ -32,18 +32,21 @@ angular.module('pullApp')
 //   });
 // }])
 
-
-.controller('NavbarCtrl', ['$scope', '$http', '$modal', '$resource', function($scope, $http, $modal, $resource){
+.controller('WhoamiCtrl', ['$scope', '$http', '$modal', '$resource', '$location', function($scope, $http, $modal, $resource, $location){
   $http.get('whoami').
   success(function(data, status, headers, config) {
     $scope.whoami = data;
-    if (data.Unregistered) {
-      $scope.showRegModal();
-    }
   }).
   error(function(data, status, headers, config) {
     console.log("request failed");
   });
+}])
+
+.controller('NavbarCtrl', ['$scope', '$http', '$modal', '$resource', '$location', function($scope, $http, $modal, $resource, $location){
+
+  if ($scope.whoami.Unregistered) {
+    $scope.showRegModal();
+  }
 
   var regModal = $modal({scope: $scope, template: 'app/views/registration.html', show: false});
   $scope.showRegModal = function() {
@@ -55,7 +58,18 @@ angular.module('pullApp')
     var newAccount = new Account();
     newAccount.Email = account.Email;
     newAccount.ID = account.ID;
-    newAccount.$save();
+    $scope.working = true;
+    newAccount.$save(function(a, putRespHeaders) {
+      $scope.working = false;
+      $scope.error = null;
+      $scope.whoami.Account = a;
+      regModal.hide();
+      $location.path('/' + a.ID);
+    }, function(err) {
+      $scope.working = false;
+      $scope.error = err.data;
+    });
+
   };
 
 }])
@@ -92,6 +106,10 @@ angular.module('pullApp')
 
   Account.get({id: $routeParams.id}, function(data){
     $scope.account = data;
+  }, function(err) {
+    if (err.status === 404) {
+      $scope.notFound = true;
+    }
   });
 }]);
 

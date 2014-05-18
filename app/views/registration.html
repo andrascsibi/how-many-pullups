@@ -6,13 +6,15 @@
         <h4 class="modal-title">Hello, {{whoami.Account.Email}}!</h4>
       </div>
       <div class="modal-body">
-        <p>We're almost there. Just choose a user name</p>
+        <p>We're almost there. Just choose a user name.</p>
+        <p>Your challange board will be at <em>http://pull-app.appspot.com/{{whoami.Account.ID}}</em></p>
+
         <form role="form">
-          <div class="form-group">
+          <div class="form-group" ng-class="{'has-error':error}">
             <input class="form-control" type="text" ng-model="whoami.Account.ID" placeholder="Username" required autofocus/>
-            <p class="help-block">Your challange board will be at <code>http://pull-app.appspot.com/{{whoami.Account.ID}}</code></p>
+            <p class="help-block">{{error.error}}</em></p>
           </div>
-          <button type="submit" class="btn btn-primary" ng-click="createAccount(whoami.Account)">Create my board</button>
+          <button type="submit" class="btn btn-primary" ng-click="createAccount(whoami.Account)" ng-disabled="working">Create my board</button>
         </form>
       </div>
 
