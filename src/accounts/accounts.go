@@ -39,6 +39,7 @@ type Settings struct {
 }
 
 type Challenge struct {
+	AccountID   string
 	ID          string
 	Title       string
 	Description string
@@ -244,7 +245,7 @@ func getChallenges(w http.ResponseWriter, r *http.Request) (interface{}, *handle
 
 	q := datastore.NewQuery("Challenges").
 		Ancestor(accountKey(c, accountId)).
-		Order("CreationDate")
+		Order("-CreationDate")
 	challenges := make([]Challenge, 0)
 	_, e := q.GetAll(c, &challenges)
 
@@ -275,6 +276,7 @@ func createChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *hand
 
 	challenge.CreationDate = time.Now()
 	challenge.ID = hash(challenge.CreationDate.String())
+	challenge.AccountID = accountId
 
 	key := challengeKey(c, accountId, challenge.ID)
 	_, e = datastore.Put(c, key, &challenge)
@@ -307,8 +309,34 @@ func updateChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *hand
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 	_ = c
-	fmt.Fprintf(w, "updating challenge title/descr %v/%v\n", accountId, challengeId)
-	return nil, nil
+
+	challenge, err := getChallenge(w, r)
+	if err != nil {
+		return nil, err
+	}
+	ch := challenge.(Challenge)
+
+	data, e := ioutil.ReadAll(r.Body)
+	if e != nil {
+		return nil, &handlerError{e, "Could not read request", http.StatusBadRequest}
+	}
+
+	var updatedChallenge Challenge
+	e = json.Unmarshal(data, &updatedChallenge)
+	if e != nil {
+		return nil, &handlerError{e, "Could not parse JSON", http.StatusBadRequest}
+	}
+
+	ch.Title = updatedChallenge.Title
+	ch.Description = updatedChallenge.Description
+
+	key := challengeKey(c, accountId, challengeId)
+	_, e = datastore.Put(c, key, &ch)
+	if e != nil {
+		return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
+	}
+
+	return challenge, nil
 }
 
 func getSets(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {

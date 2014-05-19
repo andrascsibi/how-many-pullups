@@ -25,20 +25,6 @@ angular.module('pullApp')
   };
 
   $scope.update = function(idx) {
-    var account = $scope.accounts[idx];
-    var title = prompt("Enter a new title", account.title);
-    if(title === null) {
-      return;
-    }
-    var author = prompt("Enter a new author", account.author);
-    if(author === null) {
-      return;
-    }
-    account.title = title;
-    account.author = author;
-    account.$save();
-
-    $scope.list(idx);
   };
 
 }]);

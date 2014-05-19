@@ -15,6 +15,12 @@ indexes:
   properties:
   - name: CreationDate
 
+- kind: Challenges
+  ancestor: yes
+  properties:
+  - name: CreationDate
+    direction: desc
+
 - kind: Greeting
   ancestor: yes
   properties:

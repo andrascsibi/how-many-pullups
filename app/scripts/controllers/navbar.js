@@ -18,7 +18,6 @@ angular.module('pullApp')
   };
 
   $scope.createAccount = function(account) {
-//    var Account = $resource("/accounts/:id", {id: '@id'}, {});
     var newAccount = new Account();
     newAccount.Email = account.Email;
     newAccount.ID = account.ID;

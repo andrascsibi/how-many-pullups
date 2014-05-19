@@ -3,21 +3,61 @@
 <div ng-show="notFound" class="alert alert-warning">Sorry, we couldn't find that page.</div>
 
 <div ng-hide="notFound" class="container">
-  <h3 ng-show="owner">Your Board</h3>
-  <h3 ng-hide="owner">{{account.ID}}'s Board</h3>
 
-  <p>id: {{account.ID}}</p>
-  <p>Reg date: {{account.RegDate | date}}</p>
-  <h4>Challenges</h4>
-  <div class="well" ng-repeat="c in challenges">
-    {{c.Title}}
-    date: {{c.CreationDate | date}}
+  <div class="page-header">
+    <h3 ng-show="owner">
+      Your Challenges
+    <button ng-if="owner" ng-disabled="edited" class="btn btn-primary pull-right" ng-click="add()">
+      <i class="fa fa-plus"></i> Add challenge
+    </button>
+
+    </h3>
+    <h3 ng-hide="owner">{{account.ID}}'s Challenges</h3>
   </div>
 
-  <button ng-if="owner" class="btn btn-primary" ng-click="add()">
-    <i class="fa fa-plus"></i> Add challenge
-  </button>
+  <div ng-repeat="c in challenges">
 
+    <div class="panel panel-default" ng-if="edited.ID != c.ID">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          {{c.Title}}
+          <a href="#" ng-if="owner && !edited" class="pull-right" ng-click="edit(c)">
+            <i class="fa fa-pencil"></i>
+          </a>
+        </h3>
+      </div>
+      <div class="panel-body">
+        {{c.Description}}
+      </div>
+    </div>
+
+    <div class="panel panel-default" ng-if="edited.ID == c.ID">
+      <form>
+        <div class="panel-heading">
+          <h3 class="panel-title">
+            <div class="form-group" ng-class="{'has-error':error}">
+              <input class="form-control" type="text" ng-model="edited.Title" placeholder="Challenge title" required autofocus>
+            </div>
+          </h3>
+        </div>
+
+        <div class="panel-body">
+          <textarea class="form-control" rows="2" ng-model="edited.Description" placeholder="A short description"></textarea>
+
+          <button type="submit" class="btn btn-primary" ng-click="save()" ng-disabled="working">Save</button>
+
+          <button type="submit" class="btn btn-default" ng-click="cancel()" ng-disabled="working">Cancel</button>
+
+          <button type="submit" class="btn btn-danger pull-right" ng-click="delete()" ng-disabled="working">Delete</button>
+
+
+        </div>
+      </form>
+    </div>
+
+
+
+  </div>
 
 </div>
 

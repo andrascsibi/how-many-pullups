@@ -18,7 +18,7 @@ angular.module('pullApp')
   $scope.challenges = [];
 
   $scope.list = function(idx) {
-    Challenge.query({id: $routeParams.id},function(data){
+    Challenge.query({id: $routeParams.id}, function(data){
       $scope.challenges = data;
     }, function(error){
       alert(error.data.error); // TODO
@@ -27,13 +27,40 @@ angular.module('pullApp')
 
   $scope.list();
 
+  $scope.edited = null;
+
   $scope.add = function() {
     var newChallenge = new Challenge();
     newChallenge.Title = 'Pullups';
-    newChallenge.Description = 'My brand new challenge for the month';
-    newChallenge.$save({id: $routeParams.id})
-    .then($scope.list);
+    newChallenge.Description = '';
+    newChallenge.AccountID = $routeParams.id;
+    $scope.challenges.splice(0, 0, newChallenge);
+    $scope.edited = newChallenge;
   };
+
+  $scope.edit = function(c) {
+    $scope.edited = angular.copy(c);
+  };
+
+  $scope.cancel = function() {
+    $scope.edited = null;
+  };
+
+  $scope.save = function() {
+    $scope.working = true;
+    $scope.edited.$save()
+    .then(function(){
+      $scope.working = false;
+      $scope.edited = null;
+      $scope.list();
+    }, function(err) {
+      alert(err.data.error);
+      $scope.working = false;
+      $scope.edited = null;
+      $scope.list();
+    });
+  };
+
 
 }]);
 
