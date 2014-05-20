@@ -44,17 +44,17 @@ angular.module('pullApp')
 
   $scope.cancel = function() {
     $scope.edited = null;
+    $scope.list();
   };
 
   $scope.save = function() {
     $scope.working = true;
     $scope.edited.$save()
     .then(function(){
-      $scope.working = false;
-      $scope.edited = null;
-      $scope.list();
     }, function(err) {
       alert(err.data.error);
+    })
+    .then(function(){
       $scope.working = false;
       $scope.edited = null;
       $scope.list();
