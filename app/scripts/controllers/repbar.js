@@ -1,7 +1,16 @@
 angular.module('pullApp')
 
 .controller('RepbarCtrl', ['$scope', 'Sets', function($scope, Sets) {
-  $scope.repButtons = [1,2,3,4,5,6,7,8,9,10];
+
+  var range = function(from, to, step) {
+    var range = [];
+    for (var i = from; i <= to; i += step) {
+      range.push(i);
+    }
+    return range;
+  };
+
+  $scope.repButtons = range(1,10,1);
 
   $scope.add = function(reps) {
 

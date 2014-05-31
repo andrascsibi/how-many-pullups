@@ -1,5 +1,7 @@
 <nav class="navbar navbar-default" ng-controller="RepbarCtrl">
   <form class="navbar-form">
-    <button ng-repeat="b in repButtons" type="submit" name="reps" value="{{b}}" ng-click="add(b)" class="btn btn-default btn-lg" ng-disabled="working">+{{b}}</button>
+    <span ng-repeat="b in repButtons">
+      <button type="submit" name="reps" value="{{b}}" ng-click="add(b)" class="btn btn-default btn-lg" ng-disabled="working">+{{b}}</button>
+    </span>
   </form>
 </nav>
