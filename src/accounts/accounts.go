@@ -1,25 +1,26 @@
 package accounts
 
 import (
-	"net/http"
-
 	"github.com/gorilla/mux"
-
-	"time"
+	"net/http"
 
 	"crypto/sha1"
 	"encoding/base64"
+	"encoding/csv"
+	"encoding/json"
+
 	"io"
 	"io/ioutil"
-	// "strconv"
+
+	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
+	"time"
 
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
-	"encoding/json"
-	"errors"
 )
 
 type Account struct {
@@ -98,8 +99,11 @@ func init() {
 	r.Handle("/accounts/{accountId}/challenges/{challengeId}/import",
 		handler(importSets)).
 		Methods("PUT")
+	r.Handle("/accounts/{accountId}/challenges/{challengeId}/export-csv",
+		handler(exportCsv)).
+		Methods("GET")
 	r.Handle("/accounts/{accountId}/challenges/{challengeId}/export",
-		handler(exportSets)).
+		handler(export)).
 		Methods("GET")
 
 	http.Handle("/", r)
@@ -125,8 +129,6 @@ func (fn handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if response == nil {
-		c.Errorf("response from method is nil")
-		http.Error(w, "Internal server error. Check the logs.", http.StatusInternalServerError)
 		return
 	}
 
@@ -351,6 +353,40 @@ func updateChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *hand
 	return updatedChallenge, nil
 }
 
+func export(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
+	c := appengine.NewContext(r)
+	accountId := mux.Vars(r)["accountId"]
+	challengeId := mux.Vars(r)["challengeId"]
+
+	q := datastore.NewQuery("WorkSets").Ancestor(challengeKey(c, accountId, challengeId)).Order("-Date")
+	sets := make([]WorkSet, 0)
+	_, err := q.GetAll(c, &sets)
+
+	if err != nil {
+		return nil, &handlerError{err, "Error reading sets", http.StatusInternalServerError}
+	}
+
+	return sets, nil
+}
+
+func exportCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
+	s, err := export(w, r)
+	sets := s.([]WorkSet)
+
+	if err != nil {
+		return nil, err
+	}
+
+	w.Header().Set("Content-type", "application/csv")
+	cw := csv.NewWriter(w)
+	for _, s := range sets {
+		cw.Write([]string{s.Date.Format(time.RFC3339), strconv.Itoa(s.Reps)})
+	}
+	cw.Flush()
+
+	return nil, nil
+}
+
 func getStats(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
@@ -390,6 +426,9 @@ func createSet(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
+
+	// TODO authorization
+	// TODO check if challenge exists
 
 	data, e := ioutil.ReadAll(r.Body)
 	if e != nil {
