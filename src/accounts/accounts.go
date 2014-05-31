@@ -201,7 +201,6 @@ func createAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handle
 		if err != nil {
 			return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
 		}
-		//		newAccount.Unregistered = false;
 		return newAccount, nil
 	}
 	if err != nil {

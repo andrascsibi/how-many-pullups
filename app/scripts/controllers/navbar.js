@@ -27,7 +27,6 @@ angular.module('pullApp')
         $scope.working = false;
         $scope.error = null;
         $scope.whoami.Account = a;
-        $scope.whoami.Unregistered = false;
         regModal.hide();
         $location.path('/' + a.ID);
       }, 2000); // XXX: dirtiest trick in the book
