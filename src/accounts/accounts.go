@@ -23,14 +23,9 @@ import (
 )
 
 type Account struct {
-	Email      string
-	ID         string
-	ScreenName string
-	Admin      bool // TODO retire
-	RegDate    time.Time
-
-	Challenges []string // TODO retire
-	Settings   Settings // TODO retire
+	Email   string
+	ID      string
+	RegDate time.Time
 }
 
 type Profile struct {
@@ -39,14 +34,10 @@ type Settings struct {
 }
 
 type Challenge struct {
-	AccountID   string
-	ID          string
-	Title       string
-	Description string
-	// Finished      bool
-	// Public       bool
-	// TrainingSet   int
-	// MaxReps      int
+	AccountID    string
+	ID           string
+	Title        string
+	Description  string
 	CreationDate time.Time
 }
 
