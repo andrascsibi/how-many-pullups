@@ -186,7 +186,7 @@ func createAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handle
 	}
 
 	if e = validate(newAccount.ID); e != nil {
-		return nil, &handlerError{e, "Invalid user name", http.StatusBadRequest}
+		return nil, &handlerError{e, e.Error(), http.StatusBadRequest}
 	}
 
 	key := accountKey(c, newAccount.ID)
@@ -201,6 +201,7 @@ func createAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handle
 		if err != nil {
 			return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
 		}
+		//		newAccount.Unregistered = false;
 		return newAccount, nil
 	}
 	if err != nil {
@@ -217,6 +218,9 @@ func validate(username string) error {
 	}
 	if !matches {
 		return errors.New("Username must be between 3 and 30 characters long, must start with a lowercase letter, and can only contain lowercase letters, numbers, and the '-' character.")
+	}
+	if username == "admin" {
+		return errors.New("Invalid username.")
 	}
 	return nil
 }

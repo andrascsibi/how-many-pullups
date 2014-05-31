@@ -1,7 +1,7 @@
 angular.module('pullApp')
 
-.controller('NavbarCtrl', ['$scope', '$http', '$modal', 'Account', '$location', 'WhoamiService',
-  function($scope, $http, $modal, Account, $location, WhoamiService){
+.controller('NavbarCtrl', ['$scope', '$timeout', '$http', '$modal', 'Account', '$location', 'WhoamiService',
+  function($scope, $timeout, $http, $modal, Account, $location, WhoamiService){
 
   WhoamiService().then(function(whoami) {
     $scope.whoami = whoami;
@@ -23,11 +23,14 @@ angular.module('pullApp')
     newAccount.ID = account.ID;
     $scope.working = true;
     newAccount.$save(function(a, putRespHeaders) {
-      $scope.working = false;
-      $scope.error = null;
-      $scope.whoami.Account = a;
-      regModal.hide();
-      $location.path('/' + a.ID);
+      $timeout(function() {
+        $scope.working = false;
+        $scope.error = null;
+        $scope.whoami.Account = a;
+        $scope.whoami.Unregistered = false;
+        regModal.hide();
+        $location.path('/' + a.ID);
+      }, 2000); // XXX: dirtiest trick in the book
     }, function(err) {
       $scope.working = false;
       $scope.error = err.data;
