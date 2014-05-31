@@ -1,3 +1,21 @@
 <div ng-include src="'/app/views/navbar.html'"></div>
 
-<h3>Some general stuff I guess</h3>
+<div class="container">
+  <div class="jumbotron">
+
+    <h1>Counting made easy</h1>
+
+    <h2 class="text-muted">The 1000 Pull-up Challenge</h2>
+    <p>In 2014 I accepted a challenge to perform 1000 strict tactical pull-ups in one month. Counting to one thousand is a difficult task. You can keep count on paper, but I tend to lose pieces of paper. Maintaining an Excel sheet is tedious. Those full-blown habit tracker apps? Life is just too short for them.</p>
+    <h2 class="text-muted">PullApp is simple, cross-platform, and social</h2>
+    <p>So I created PullApp. When I'm done with a set of pull-ups, I press exactly one button, on any device, and it's stored in my training journal forever. Also, everybody can see <a href="/andras">my challenge board</a>, so my friends can keep me accountable for finishing the challenge.</p>
+    <h2 class="text-muted">Track your own sets and reps with PullApp!</h2>
+    <p>Use it for your own fitness challenge, can be as simple as 100 pushups in a week. Heck, even standing up from your desk ten times a day can be a good fitness challenge in itself.</p>
+
+    <a href="{{whoami.LoginURL}}" target="_self" ng-if="whoami.LoginURL" class="btn btn-primary btn-lg" role="button">Sign up with your Google Account</a>
+
+    <a href="{{whoami.Account.ID}}" target="_self" ng-if="whoami.Account.ID" class="btn btn-primary btn-lg" role="button">See your challenges</a>
+
+  </div>
+
+</div>

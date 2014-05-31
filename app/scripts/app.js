@@ -11,6 +11,7 @@ angular.module('pullApp', [
 
   $routeProvider
     .when('/', {
+      controller: 'HomepageCtrl',
       templateUrl:'/app/views/index.html',
     })
     .when('/admin/accounts', {

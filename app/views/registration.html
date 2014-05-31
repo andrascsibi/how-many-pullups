@@ -7,7 +7,7 @@
       </div>
       <div class="modal-body">
         <p>We're almost there. Just choose a user name.</p>
-        <p>Your challange board will be at <em>http://pull-app.appspot.com/{{whoami.Account.ID}}</em></p>
+        <p>Your challange board will be at <em>http://pull-app.appspot.com/{{whoami.Account.ID||"'username'"}}</em></p>
 
         <form role="form">
           <div class="form-group" ng-class="{'has-error':error}">
