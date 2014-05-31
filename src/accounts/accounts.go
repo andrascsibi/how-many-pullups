@@ -38,6 +38,8 @@ type Challenge struct {
 	ID           string
 	Title        string
 	Description  string
+	MaxReps      int
+	StepReps     int
 	CreationDate time.Time
 }
 
@@ -335,16 +337,18 @@ func updateChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *hand
 		return nil, &handlerError{e, "Could not parse JSON", http.StatusBadRequest}
 	}
 
-	ch.Title = updatedChallenge.Title
-	ch.Description = updatedChallenge.Description
+	// protect certain fields
+	updatedChallenge.CreationDate = ch.CreationDate
+	updatedChallenge.ID = ch.ID
+	updatedChallenge.AccountID = ch.AccountID
 
 	key := challengeKey(c, accountId, challengeId)
-	_, e = datastore.Put(c, key, &ch)
+	_, e = datastore.Put(c, key, &updatedChallenge)
 	if e != nil {
 		return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
 	}
 
-	return challenge, nil
+	return updatedChallenge, nil
 }
 
 func getStats(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {

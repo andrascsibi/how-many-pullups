@@ -37,11 +37,20 @@
 
         <div class="panel-body">
             <div class="form-group" ng-class="{'has-error':error}">
-              <input class="form-control" type="text" ng-model="edited.Title" placeholder="Challenge title" required autofocus>
+              <label class="sr-only" for="title-input">Title</label>
+              <input id="title-input" class="form-control" type="text" ng-model="edited.Title" placeholder="Challenge title" required autofocus>
             </div>
 
-          <textarea class="form-control form-group" rows="2" ng-model="edited.Description" placeholder="A short description"></textarea>
 
+            <div class="form-group" ng-class="{'has-error':error}">
+              <label class="sr-only" for="description-input">Description</label>
+              <textarea id="description-input" class="form-control" rows="2" ng-model="edited.Description" placeholder="A short description"></textarea>
+            </div>
+            <div class="form-group form-inline" ng-class="{'has-error':error}">
+              <input  ng-class="{'has-error':error}" id="maxrep-input" class="form-control form-inline input-sm num-input" ng-model="edited.MaxReps" name="max-reps" type="number" min="1" max="100" ng-max="100" step="1">
+              <label for="maxrep-input" class="form-inline text-muted">is the number of repetitions I can do without stopping</label>
+            </label>
+          </div>
           <button type="submit" class="btn btn-primary" ng-click="save()" ng-disabled="working">Save</button>
 
           <button type="button" class="btn btn-default" ng-click="cancel()" ng-disabled="working">Cancel</button>

@@ -10,7 +10,7 @@ angular.module('pullApp')
     return range;
   };
 
-  $scope.repButtons = range(1,10,1);
+  $scope.repButtons = range(1, $scope.challenge.MaxReps || 10, 1);
 
   $scope.add = function(reps) {
 

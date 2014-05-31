@@ -45,6 +45,8 @@ angular.module('pullApp')
     var newChallenge = new Challenge();
     newChallenge.Title = 'Pullups';
     newChallenge.Description = '';
+    newChallenge.MaxReps = 10;
+    newChallenge.StepReps = 1;
     newChallenge.AccountID = $routeParams.id;
     $scope.challenges.splice(0, 0, newChallenge);
     $scope.edited = newChallenge;
