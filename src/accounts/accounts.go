@@ -65,7 +65,7 @@ func init() {
 		handler(getAccount)).
 		Methods("GET")
 	r.Handle("/accounts/{accountId}",
-		handler(updateAccount)).
+		handler(createAccount)). // TODO update?
 		Methods("POST")
 
 	r.Handle("/accounts/{accountId}/challenges",
@@ -228,8 +228,8 @@ func updateAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handle
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 	_ = c
-	fmt.Fprintf(w, "updating account %v\n", accountId)
-	return nil, nil
+	_ = accountId
+	return nil, &handlerError{errors.New("updating account not supported"), "", http.StatusMethodNotAllowed}
 }
 
 func getChallenges(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
@@ -372,6 +372,10 @@ func accountKey(c appengine.Context, id string) *datastore.Key {
 
 func challengeKey(c appengine.Context, accountId string, id string) *datastore.Key {
 	return datastore.NewKey(c, "Challenges", id, 0, accountKey(c, accountId))
+}
+
+func workSetKey(c appengine.Context, accountId string, challengeId string) *datastore.Key {
+	return datastore.NewIncompleteKey(c, "WorkSets", challengeKey(c, accountId, challengeId))
 }
 
 func getAccountByEmail(c appengine.Context, email string) (*Account, error) {
