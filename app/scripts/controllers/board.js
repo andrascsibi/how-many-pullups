@@ -17,7 +17,19 @@ angular.module('pullApp')
 
   $scope.challenges = [];
 
-  $scope.list = function(idx) {
+  // $scope.reloadChallenge = function(c) {
+  //   $scope.challenges.forEach(function(e, i) {
+  //     if (e.ID !== c.ID) return;
+  //     e.$get(function(data) {
+  //       $scope.challenges = $scope.challenges.map(function(e) {
+  //         if (e.ID !== c.ID) return e;
+  //         return data;
+  //       });
+  //     });
+  //   });
+  // };
+
+  $scope.list = function() {
     Challenge.query({id: $routeParams.id}, function(data){
       $scope.challenges = data;
     }, function(error){

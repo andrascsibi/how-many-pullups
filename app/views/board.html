@@ -15,42 +15,38 @@
     <h3 ng-hide="owner">{{account.ID}}'s Challenges</h3>
   </div>
 
-  <div ng-repeat="c in challenges">
-
-    <div class="panel panel-default" ng-if="edited.ID != c.ID">
+  <div ng-repeat="challenge in challenges">
+    <div class="panel panel-default" ng-if="edited.ID != challenge.ID">
       <div class="panel-heading">
         <h3 class="panel-title">
-          {{c.Title}}
-          <a href="#" ng-if="owner && !edited" class="pull-right" ng-click="edit(c)">
+          {{challenge.Title}}
+          <a href="#" ng-if="owner && !edited" class="pull-right" ng-click="edit(challenge)">
             <i class="fa fa-pencil"></i>
           </a>
         </h3>
       </div>
       <div class="panel-body">
-        {{c.Description}}
+        <p class="text-muted">{{challenge.Description}}</p>
         <div ng-include src="'/app/views/counter.html'"></div>
+        <div ng-if="owner" ng-include src="'/app/views/repbar.html'"></div>
       </div>
     </div>
 
-    <div class="panel panel-default" ng-if="edited.ID == c.ID">
+    <div class="panel panel-default" ng-if="edited.ID == challenge.ID">
       <form>
-        <div class="panel-heading">
-          <h3 class="panel-title">
+
+        <div class="panel-body">
             <div class="form-group" ng-class="{'has-error':error}">
               <input class="form-control" type="text" ng-model="edited.Title" placeholder="Challenge title" required autofocus>
             </div>
-          </h3>
-        </div>
 
-        <div class="panel-body">
-          <textarea class="form-control" rows="2" ng-model="edited.Description" placeholder="A short description"></textarea>
+          <textarea class="form-control form-group" rows="2" ng-model="edited.Description" placeholder="A short description"></textarea>
 
           <button type="submit" class="btn btn-primary" ng-click="save()" ng-disabled="working">Save</button>
 
           <button type="button" class="btn btn-default" ng-click="cancel()" ng-disabled="working">Cancel</button>
 
           <button type="button" class="btn btn-danger pull-right" ng-click="delete()" ng-disabled="working">Delete</button>
-
 
         </div>
       </form>
