@@ -96,15 +96,16 @@ func init() {
 	r.Handle("/accounts/{accountId}/challenges/{challengeId}/sets",
 		handler(createSet)).
 		Methods("POST")
-	r.Handle("/accounts/{accountId}/challenges/{challengeId}/import",
-		handler(importSets)).
-		Methods("PUT")
+
 	r.Handle("/accounts/{accountId}/challenges/{challengeId}/export-csv",
 		handler(exportCsv)).
 		Methods("GET")
 	r.Handle("/accounts/{accountId}/challenges/{challengeId}/export",
 		handler(export)).
 		Methods("GET")
+	r.Handle("/accounts/{accountId}/challenges/{challengeId}/import-csv",
+		handler(importCsv)).
+		Methods("POST")
 
 	http.Handle("/", r)
 }
@@ -387,6 +388,46 @@ func exportCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 	return nil, nil
 }
 
+func importCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
+	c := appengine.NewContext(r)
+	accountId := mux.Vars(r)["accountId"]
+	challengeId := mux.Vars(r)["challengeId"]
+
+	csvIn := csv.NewReader(r.Body)
+	for i := 1; ; i++ {
+		line, err := csvIn.Read()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, &handlerError{err, "Could not read request", http.StatusBadRequest}
+		}
+
+		if len(line) != 2 {
+			return nil, &handlerError{err, fmt.Sprintf("Each line should contain 2 fields. Line no: %d '%v'", i, line), http.StatusBadRequest}
+		}
+		date, err := time.Parse(time.RFC3339, line[0])
+		if err != nil {
+			return nil, &handlerError{err, fmt.Sprintf("Malformed date in line: %d '%v'", i, line[0]), http.StatusBadRequest}
+		}
+		reps, err := strconv.Atoi(line[1])
+		if err != nil {
+			return nil, &handlerError{err, fmt.Sprintf("Malformed number in line: %d '%v'", i, line[1]), http.StatusBadRequest}
+		}
+		if reps == 0 {
+			continue
+		}
+		newSet := WorkSet{Date: date, Reps: reps}
+
+		key := workSetKey(c, accountId, challengeId)
+		_, err = datastore.Put(c, key, &newSet)
+		if err != nil {
+			return nil, &handlerError{err, "Error storing in datastore", http.StatusInternalServerError}
+		}
+	}
+
+	return nil, nil
+}
+
 func getStats(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
@@ -450,26 +491,6 @@ func createSet(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 	}
 
 	return newSet, nil
-}
-
-func importSets(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
-	accountId := mux.Vars(r)["accountId"]
-	challengeId := mux.Vars(r)["challengeId"]
-	_ = c
-	_ = accountId
-	_ = challengeId
-	return nil, &handlerError{errors.New("import not supported"), "", http.StatusMethodNotAllowed}
-}
-
-func exportSets(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
-	accountId := mux.Vars(r)["accountId"]
-	challengeId := mux.Vars(r)["challengeId"]
-	_ = c
-	_ = accountId
-	_ = challengeId
-	return nil, &handlerError{errors.New("export not supported"), "", http.StatusMethodNotAllowed}
 }
 
 func accountKey(c appengine.Context, id string) *datastore.Key {
