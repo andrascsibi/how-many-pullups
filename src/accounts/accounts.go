@@ -50,6 +50,16 @@ type Challenge struct {
 	CreationDate time.Time
 }
 
+type WorkSet struct {
+	Reps int
+	Date time.Time
+}
+
+type ChallengeStat struct {
+	Today int
+	Total int
+}
+
 func init() {
 	r := mux.NewRouter()
 	r.Handle("/whoami", handler(whoami)).Methods("GET")
@@ -82,15 +92,22 @@ func init() {
 		handler(updateChallenge)).
 		Methods("POST")
 
+	r.Handle("/accounts/{accountId}/challenges/{challengeId}/stats",
+		handler(getStats)).
+		Methods("GET")
+
 	r.Handle("/accounts/{accountId}/challenges/{challengeId}/sets",
 		handler(getSets)).
 		Methods("GET")
 	r.Handle("/accounts/{accountId}/challenges/{challengeId}/sets",
 		handler(createSet)).
 		Methods("POST")
-	r.Handle("/accounts/{accountId}/challenges/{challengeId}/sets",
+	r.Handle("/accounts/{accountId}/challenges/{challengeId}/import",
 		handler(importSets)).
 		Methods("PUT")
+	r.Handle("/accounts/{accountId}/challenges/{challengeId}/export",
+		handler(exportSets)).
+		Methods("GET")
 
 	http.Handle("/", r)
 }
@@ -339,22 +356,66 @@ func updateChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *hand
 	return challenge, nil
 }
 
+func getStats(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
+	c := appengine.NewContext(r)
+	accountId := mux.Vars(r)["accountId"]
+	challengeId := mux.Vars(r)["challengeId"]
+
+	q := datastore.NewQuery("WorkSets").Ancestor(challengeKey(c, accountId, challengeId)).Order("-Date")
+	sets := make([]WorkSet, 0)
+	_, err := q.GetAll(c, &sets)
+
+	if err != nil {
+		return nil, &handlerError{err, "Error reading sets", http.StatusInternalServerError}
+	}
+
+	var stat ChallengeStat
+	today := time.Now().Truncate(24 * time.Hour)
+	for _, s := range sets {
+		if today.Equal(s.Date.Truncate(24 * time.Hour)) {
+			stat.Today += s.Reps
+		}
+		stat.Total += s.Reps
+	}
+
+	return stat, nil
+}
+
 func getSets(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 	_ = c
-	fmt.Fprintf(w, "getting sets of %v/%v\n", accountId, challengeId)
-	return nil, nil
+	_ = accountId
+	_ = challengeId
+	return nil, &handlerError{errors.New("import not supported"), "", http.StatusMethodNotAllowed}
 }
 
 func createSet(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
-	_ = c
-	fmt.Fprintf(w, "creating set for %v/%v\n", accountId, challengeId)
-	return nil, nil
+
+	data, e := ioutil.ReadAll(r.Body)
+	if e != nil {
+		return nil, &handlerError{e, "Could not read request", http.StatusBadRequest}
+	}
+
+	var newSet WorkSet
+	e = json.Unmarshal(data, &newSet)
+	if e != nil {
+		return nil, &handlerError{e, "Could not parse JSON", http.StatusBadRequest}
+	}
+
+	newSet.Date = time.Now()
+
+	key := workSetKey(c, accountId, challengeId)
+	_, e = datastore.Put(c, key, &newSet)
+	if e != nil {
+		return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
+	}
+
+	return newSet, nil
 }
 
 func importSets(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
@@ -362,8 +423,19 @@ func importSets(w http.ResponseWriter, r *http.Request) (interface{}, *handlerEr
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 	_ = c
-	fmt.Fprintf(w, "importing sets to %v/%v\n", accountId, challengeId)
-	return nil, nil
+	_ = accountId
+	_ = challengeId
+	return nil, &handlerError{errors.New("import not supported"), "", http.StatusMethodNotAllowed}
+}
+
+func exportSets(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
+	c := appengine.NewContext(r)
+	accountId := mux.Vars(r)["accountId"]
+	challengeId := mux.Vars(r)["challengeId"]
+	_ = c
+	_ = accountId
+	_ = challengeId
+	return nil, &handlerError{errors.New("export not supported"), "", http.StatusMethodNotAllowed}
 }
 
 func accountKey(c appengine.Context, id string) *datastore.Key {

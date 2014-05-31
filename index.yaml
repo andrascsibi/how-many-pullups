@@ -38,3 +38,9 @@ indexes:
   properties:
   - name: date
     direction: desc
+
+- kind: WorkSets
+  ancestor: yes
+  properties:
+  - name: Date
+    direction: desc
