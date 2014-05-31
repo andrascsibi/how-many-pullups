@@ -28,6 +28,7 @@
       </div>
       <div class="panel-body">
         {{c.Description}}
+        <div ng-include src="'/app/views/counter.html'"></div>
       </div>
     </div>
 
@@ -54,6 +55,9 @@
         </div>
       </form>
     </div>
+
+    <div class="container" ng-if="owner"></div>
+
 
 
 
