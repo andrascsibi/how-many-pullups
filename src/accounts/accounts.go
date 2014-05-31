@@ -397,7 +397,9 @@ func importCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 	challengeId := mux.Vars(r)["challengeId"]
 
 	csvIn := csv.NewReader(r.Body)
-	for i := 1; ; i++ {
+	importedSets := make([]WorkSet, 0, 1000)
+
+	for i := 0; ; i++ {
 		line, err := csvIn.Read()
 		if err == io.EOF {
 			break
@@ -419,13 +421,20 @@ func importCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 		if reps == 0 {
 			continue
 		}
-		newSet := WorkSet{Date: date, Reps: reps}
-
-		key := workSetKey(c, accountId, challengeId)
-		_, err = datastore.Put(c, key, &newSet)
-		if err != nil {
-			return nil, &handlerError{err, "Error storing in datastore", http.StatusInternalServerError}
+		if i > 1000 {
+			return nil, &handlerError{err, "Too many lines", http.StatusBadRequest}
 		}
+		importedSets = append(importedSets, WorkSet{Date: date, Reps: reps})
+	}
+
+	//	key := workSetKey(c, accountId, challengeId)
+	keys := make([]*datastore.Key, len(importedSets))
+	for i := 0; i < len(importedSets); i++ {
+		keys[i] = workSetKey(c, accountId, challengeId)
+	}
+	_, err := datastore.PutMulti(c, keys, importedSets)
+	if err != nil {
+		return nil, &handlerError{err, "Error storing in datastore", http.StatusInternalServerError}
 	}
 
 	return nil, nil
