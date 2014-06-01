@@ -5,14 +5,14 @@
 <div ng-hide="notFound" class="container">
 
   <div class="page-header">
-    <h3 ng-show="owner">
+    <h2 ng-show="owner">
       My Challenges
     <button ng-if="owner" ng-disabled="edited" class="btn btn-primary pull-right" ng-click="add()">
       <i class="fa fa-plus"></i> Add challenge
     </button>
 
-    </h3>
-    <h3 ng-hide="owner">{{account.ID}}'s Challenges</h3>
+    </h2>
+    <h2 ng-hide="owner">{{account.ID}}'s Challenges</h2>
   </div>
 
   <div ng-repeat="challenge in challenges">

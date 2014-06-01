@@ -2,5 +2,6 @@
 <h3>
   Today <span class="label label-primary">{{stat.Today}}</span>
   Ever <span class="label label-info">{{stat.Total}}</span>
+  <small ng-if="stat.MinDate">{{stat.MinDate | date }} - {{stat.MaxDate | date}}</small>
 </h3>
 </span>

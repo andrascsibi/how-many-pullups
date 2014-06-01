@@ -50,8 +50,10 @@ type WorkSet struct {
 }
 
 type ChallengeStat struct {
-	Today int
-	Total int
+	Today   int
+	Total   int
+	MinDate time.Time
+	MaxDate time.Time
 }
 
 func init() {
@@ -454,9 +456,14 @@ func getStats(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErro
 	}
 
 	var stat ChallengeStat
+	if len(sets) == 0 {
+		return stat, nil
+	}
+	stat.MaxDate = sets[0].Date
+	stat.MinDate = sets[len(sets)-1].Date
 	today := time.Now().Truncate(24 * time.Hour)
 	for _, s := range sets {
-		if today.Equal(s.Date.Truncate(24 * time.Hour)) {
+		if today.Equal(s.Date.Truncate(24 * time.Hour)) { // TODO only works for utc
 			stat.Today += s.Reps
 		}
 		stat.Total += s.Reps
