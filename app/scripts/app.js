@@ -11,10 +11,12 @@ angular.module('pullApp', [
 
   $routeProvider
     .when('/', {
+      title: 'Counting Made Easy',
       controller: 'HomepageCtrl',
       templateUrl:'/app/views/index.html',
     })
     .when('/admin/accounts', {
+      title: 'Accounts',
       controller:'AdminCtrl',
       templateUrl:'/app/views/admin/accounts.html',
     })

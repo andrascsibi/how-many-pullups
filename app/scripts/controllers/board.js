@@ -1,6 +1,9 @@
 angular.module('pullApp')
 
-.controller('BoardCtrl', ['$scope', 'Account', 'Challenge', '$routeParams', 'WhoamiService', function($scope, Account, Challenge, $routeParams, WhoamiService) {
+.controller('BoardCtrl', ['$scope', '$rootScope', 'Account', 'Challenge', '$routeParams', 'WhoamiService',
+  function($scope, $rootScope, Account, Challenge, $routeParams, WhoamiService) {
+
+  $rootScope.title = $routeParams.id + "'s challenges";
 
   WhoamiService().then(function(whoami) {
     $scope.whoami = whoami;
