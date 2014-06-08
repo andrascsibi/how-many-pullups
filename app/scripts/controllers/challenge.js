@@ -62,7 +62,7 @@ angular.module('pullApp')
     domain: "month",
     subDomain: "day",
     data: toCalHeatmap(sets),
-    legend: [10, 50, 70, 100]
+    legend: [10, 30, 50, 75]
   });
 
 
