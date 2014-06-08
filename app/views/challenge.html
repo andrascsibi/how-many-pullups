@@ -3,17 +3,19 @@
 
 <div class="container">
   <h1>{{title}}</h1>
+  <p class="text-muted">{{challenge.Description}}</p>
+  <h2>
+    <span class="label label-success">{{stats.totalReps}}</span>
+    <small>reps between
+    {{stats.minDate | date}} &mdash; {{stats.maxDate | date}}</small>
 
-  <h2>Statistics</h2>
-    <p>Total number of reps: {{stats.totalReps}}
+  </h2>
+  <div id="cal-heatmap"></div>
+
     <p>Total number of sets: {{stats.numSets}}
     <p>Average reps per set: {{stats.totalReps / stats.numSets | number: 2}}
     <p>Max reps: {{stats.maxReps}}
-    <p>Min date: {{stats.minDate | date: 'medium'}}
-    <p>Max date: {{stats.maxDate | date: 'medium'}}
 
-  <h2>Activity</h2>
-  <div id="cal-heatmap"></div>
 
 </div>
 

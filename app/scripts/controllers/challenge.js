@@ -47,14 +47,42 @@ angular.module('pullApp')
     });
   };
 
+  var groupByDay = function(sets) {
+    return sets.reduce(function(memo, cur) {
+      var date = new Date(cur.ts*1000).toDateString();
+      if (!memo[date]) {
+        memo[date] = {sets: [], reps: 0};
+      }
+      memo[date].sets.push(cur);
+      memo[date].reps += cur.reps;
+      return memo;
+    }, {});
+  };
+
   var sets = parseDates(allSets);
   $scope.stats = getStats(allSets);
 
-//  var setsByDay = groupByDates(sets);
+  var setsByDay = groupByDay(sets);
+  var repsByDay = Object.keys(setsByDay).map(function(k) {
+    return setsByDay[k].reps;
+  });
+  repsByDay.sort(function(l,r) {return l-r;});
+
+  var getPercentile = function(arr, p) {
+    arr.sort(function(l,r) {return l-r;});
+    return arr[Math.floor(arr.length * p)];
+  };
+
+  var getLegend = function(max) {
+    var step = max / 4;
+    return [1, 2, 3, 4].map(function(e){
+      return Math.round(e * step);
+    });
+  };
 
   var cal = new CalHeatMap();
   cal.init({
-    start: new Date(2014, 0), // January, 1st 2000
+    start: new Date($scope.stats.minDate),
     range: 6,
     end: new Date(),
     itemName: ['rep', 'reps'],
@@ -62,8 +90,9 @@ angular.module('pullApp')
     domain: "month",
     subDomain: "day",
     data: toCalHeatmap(sets),
-    legend: [10, 30, 50, 75]
+    cellSize: 15,
+    legendCellSize: 15,
+    legend: getLegend(getPercentile(repsByDay, 0.9)),
   });
-
 
 }]);
