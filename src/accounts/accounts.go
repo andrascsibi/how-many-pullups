@@ -385,6 +385,7 @@ func exportCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 
 	w.Header().Set("Content-type", "application/csv")
 	cw := csv.NewWriter(w)
+	cw.Write([]string{"timestamp", "reps"})
 	for _, s := range sets {
 		cw.Write([]string{s.Date.Format(time.RFC3339), strconv.Itoa(s.Reps)})
 	}
@@ -411,6 +412,9 @@ func importCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 
 		if len(line) != 2 {
 			return nil, &handlerError{err, fmt.Sprintf("Each line should contain 2 fields. Line no: %d '%v'", i, line), http.StatusBadRequest}
+		}
+		if line[0] == "timestamp" && line[1] == "reps" {
+			continue
 		}
 		date, err := time.Parse(time.RFC3339, line[0])
 		if err != nil {

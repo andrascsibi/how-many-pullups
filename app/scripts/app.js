@@ -24,6 +24,18 @@ angular.module('pullApp', [
       controller:'BoardCtrl',
       templateUrl:'/app/views/board.html',
     })
+    .when('/:id/:c_id', {
+      controller:'ChallengeCtrl',
+      templateUrl:'/app/views/challenge.html',
+      resolve: {
+        allSets: function(AllSets, $route) {
+          return AllSets.query($route.current.params).$promise;
+        },
+        challenge: function(Challenge, $route) {
+          return Challenge.get($route.current.params).$promise;
+        }
+      }
+    })
     .otherwise({
       redirectTo:'/'
     });

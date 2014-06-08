@@ -19,7 +19,7 @@
     <div class="panel panel-default" ng-if="edited.ID != challenge.ID">
       <div class="panel-heading">
         <h3 class="panel-title">
-          {{challenge.Title}}
+          <a href="/{{account.ID}}/{{challenge.ID}}">{{challenge.Title}}</a>
           <a href="#" ng-if="owner && !edited" class="pull-right" ng-click="edit(challenge)">
             <i class="fa fa-pencil"></i>
           </a>
