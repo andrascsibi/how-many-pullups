@@ -19,3 +19,12 @@
 .num-input {
   width: 60px;
 }
+
+.stat {
+  text-align: center;
+}
+
+.stat-num {
+  font-size: 1.5em;
+  font-weight: bold;
+}

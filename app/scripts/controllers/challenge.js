@@ -80,19 +80,55 @@ angular.module('pullApp')
     });
   };
 
+  $scope.stats.workDays = repsByDay.length;
+
   var cal = new CalHeatMap();
   cal.init({
     start: new Date($scope.stats.minDate),
     range: 6,
+    itemSelector: '#cal-heatmap-punchcard',
+    itemNamespace: 'punchcard',
     end: new Date(),
     itemName: ['rep', 'reps'],
     tooltip: true,
-    domain: "month",
+    domain: "week",
+    rowLimit: 24,
+    subDomain: "hour",
+    data: toCalHeatmap(sets),
+    cellSize: 15,
+    legendCellSize: 15,
+    legend: [10,20,30,40],
+    legendOrientation: 'vertical',
+    legendHorizontalPosition: 'right',
+    legendVerticalPosition: 'center',
+    label: {position: 'top'},
+    domainGutter: 10,
+  });
+
+  var cal2 = new CalHeatMap();
+  cal2.init({
+    start: new Date($scope.stats.minDate),
+    range: 6,
+    itemSelector: '#cal-heatmap-daily',
+    itemNamespace: 'daily',
+    end: new Date(),
+    itemName: ['rep', 'reps'],
+    tooltip: true,
+    domain: "week",
+    rowLimit: 1,
     subDomain: "day",
     data: toCalHeatmap(sets),
     cellSize: 15,
     legendCellSize: 15,
+    subDomainTextFormat: function(date, value) {
+      return value;
+    },
     legend: getLegend(getPercentile(repsByDay, 0.9)),
+    displayLegend: false,
+    label: {position: 'top'},
+    domainGutter: 10,
+    domainLabelFormat: '',
   });
+
 
 }]);
