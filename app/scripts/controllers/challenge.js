@@ -12,7 +12,6 @@ angular.module('pullApp')
     return;
   }
 
-
   var parseDates = function(sets) {
     return sets
     .filter(function(cur) {
@@ -51,26 +50,34 @@ angular.module('pullApp')
     });
   };
 
-  var groupByDay = function(sets) {
-    return sets.reduce(function(memo, cur) {
-      var date = new Date(cur.ts*1000).toDateString();
-      if (!memo[date]) {
-        memo[date] = {sets: [], reps: 0};
-      }
-      memo[date].sets.push(cur);
-      memo[date].reps += cur.reps;
-      return memo;
-    }, {});
-  };
-
-  var sets = parseDates(allSets);
   $scope.stats = getStats(allSets);
 
-  var setsByDay = groupByDay(sets);
-  var repsByDay = Object.keys(setsByDay).map(function(k) {
-    return setsByDay[k].reps;
-  });
-  repsByDay.sort(function(l,r) {return l-r;});
+  var sets = parseDates(allSets);
+
+  var dayKey = function(set) {
+    return new Date(set.ts*1000)
+        .toISOString()
+        .substring(0, "2014-06-09".length);
+  };
+  var hourKey = function(set) {
+    return new Date(set.ts*1000)
+        .toISOString()
+        .substring(0, "2014-06-09T20".length);
+  };
+
+  var histogram = function(sets, keyFun) {
+    var groups = _.groupBy(sets, keyFun);
+    var repCount = _.values(groups)
+        .map(function(g) {
+          return g.reduce(function(sum, cur) {
+            return sum + cur.reps;
+          }, 0);
+        });
+    return _.sortBy(repCount, function(l,r) {return l-r;});
+  };
+
+  var repsByDay = histogram(sets, dayKey);
+  var repsByHour = histogram(sets, hourKey);
 
   var getPercentile = function(arr, p) {
     arr.sort(function(l,r) {return l-r;});
@@ -105,10 +112,9 @@ angular.module('pullApp')
     itemNamespace: 'punchcard',
     rowLimit: 24,
     subDomain: "hour",
-    legend: [10,20,30,40], // TODO
-    legendOrientation: 'vertical',
+    legend: getLegend(getPercentile(repsByHour, 0.9)),
     legendHorizontalPosition: 'right',
-    legendVerticalPosition: 'center',
+    legendVerticalPosition: 'top',
     label: {position: 'top'},
   }, calSettings));
 
@@ -122,7 +128,8 @@ angular.module('pullApp')
       return value;
     },
     legend: getLegend(getPercentile(repsByDay, 0.9)),
-    displayLegend: false,
+    legendHorizontalPosition: 'right',
+    legendVerticalPosition: 'bottom',
     domainLabelFormat: '',
   }, calSettings));
 
@@ -135,6 +142,4 @@ angular.module('pullApp')
     cal.previous();
     cal2.previous();
   };
-
-
 }]);
