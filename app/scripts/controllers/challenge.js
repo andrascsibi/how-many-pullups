@@ -115,9 +115,10 @@ angular.module('pullApp')
   var now = new Date();
   var sixWeeksAgo = new Date().setDate(now.getDate() - 5*7);
   var isOld = sixWeeksAgo > maxDate;
+  var isNew = minDate > sixWeeksAgo;
 
   var calSettings = {
-    start: isOld ? minDate : sixWeeksAgo,
+    start: isOld || isNew ? minDate : sixWeeksAgo,
     minDate: minDate,
     maxDate: isOld ? maxDate: now,
     range: 6,
@@ -167,12 +168,12 @@ angular.module('pullApp')
 
   var STEPS = 2;
   $scope.next = function() {
-    cal.next(STEPS);
-    cal2.next(STEPS);
+    hourlyCal.next(STEPS);
+    dailyCal.next(STEPS);
   };
 
   $scope.previous = function() {
-    cal.previous(STEPS);
-    cal2.previous(STEPS);
+    hourlyCal.previous(STEPS);
+    dailyCal.previous(STEPS);
   };
 }]);
