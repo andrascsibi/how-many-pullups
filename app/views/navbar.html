@@ -15,14 +15,14 @@
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav navbar-right">
 
-        <li class="navbar-text" ng-if="whoami.Unregistered">
+        <li class="navbar-text" ng-if="whoami.Unregistered" ng-click="showRegModal()">
             Unregistered account
         </li>
 
         <li ng-if="whoami.Account.Email">
           <p class="navbar-text navbar-right">
             Signed in as
-            <a ng-if="whoami.Unregistered" href="/" class="navbar-link">{{whoami.Account.Email}}</a>
+            <a ng-if="whoami.Unregistered" href="#" ng-click="showRegModal()" class="navbar-link">{{whoami.Account.Email}}</a>
             <a ng-if="whoami.Account.ID" href="/{{whoami.Account.ID}}" class="navbar-link">{{whoami.Account.ID}}</a>
           </p>
         </li>
