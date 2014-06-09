@@ -93,9 +93,16 @@ angular.module('pullApp')
 
   $scope.stats.workDays = repsByDay.length;
 
+  var minDate = new Date($scope.stats.minDate);
+  var maxDate = new Date($scope.stats.maxDate);
+  var now = new Date();
+  var sixWeeksAgo = new Date().setDate(now.getDate() - 5*7);
+  var isOld = sixWeeksAgo > maxDate;
+
   var calSettings = {
-    start: new Date($scope.stats.minDate),
-    end: new Date(),
+    start: isOld ? minDate : sixWeeksAgo,
+    minDate: minDate,
+    maxDate: isOld ? maxDate: now,
     range: 6,
     domain: "week",
     itemName: ['rep', 'reps'],
@@ -104,6 +111,12 @@ angular.module('pullApp')
     cellSize: 15,
     legendCellSize: 15,
     domainGutter: 10,
+    onMinDomainReached: function(reached) {
+      $scope.prevDisabled = reached;
+    },
+    onMaxDomainReached: function(reached) {
+      $scope.nextDisabled = reached;
+    },
   };
 
   var cal = new CalHeatMap();
@@ -116,6 +129,7 @@ angular.module('pullApp')
     legendHorizontalPosition: 'right',
     legendVerticalPosition: 'top',
     label: {position: 'top'},
+    highlight: now,
   }, calSettings));
 
   var cal2 = new CalHeatMap();

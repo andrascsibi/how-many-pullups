@@ -4,10 +4,10 @@
   <h1>{{challenge.Title}} <small ng-if="!whoami.owner">by {{challenge.AccountID}}</small></h1>
   <p class="text-muted">{{challenge.Description}}</p>
 
-  <button id="minDate-previous" style="margin-bottom: 10px;" class="btn btn-default" ng-click="previous()">
+  <button class="btn btn-default" ng-click="previous()" ng-disabled="prevDisabled">
     <i class="glyphicon glyphicon-chevron-left"></i>
   </button>
-  <button id="minDate-previous" style="margin-bottom: 10px;" class="btn btn-default" ng-click="next()">
+  <button class="btn btn-default" ng-click="next()" ng-disabled="nextDisabled">
     <i class="glyphicon glyphicon-chevron-right"></i>
   </button>
   <div id="cal-heatmap-punchcard"></div>
