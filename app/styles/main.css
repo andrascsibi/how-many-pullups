@@ -32,3 +32,10 @@
   font-weight: bold;
 }
 
+#cal-heatmap-daily {
+  margin-top: 10px;
+}
+
+.pagination-buttons {
+  margin-bottom: 30px;
+}

@@ -46,15 +46,15 @@
   <div ng-if="whoami.owner" ng-include src="'/app/views/repbar.html'"></div>
 
   <div id="cal-heatmap-hourly"></div>
-  <div id="cal-heatmap-daily" style="margin: 10px 0;"></div>
-  <button class="btn btn-default" ng-click="previous()" ng-disabled="prevDisabled">
-    <i class="glyphicon glyphicon-chevron-left"></i>
-  </button>
-  <button class="btn btn-default" ng-click="next()" ng-disabled="nextDisabled">
-    <i class="glyphicon glyphicon-chevron-right"></i>
-  </button>
-
-  foo
+  <div id="cal-heatmap-daily"></div>
+  <div class="pagination-buttons">
+    <button class="btn btn-default" ng-click="previous()" ng-disabled="prevDisabled">
+      <i class="glyphicon glyphicon-chevron-left"></i>
+    </button>
+    <button class="btn btn-default" ng-click="next()" ng-disabled="nextDisabled">
+      <i class="glyphicon glyphicon-chevron-right"></i>
+    </button>
+  </div>
 
 </div>
 
