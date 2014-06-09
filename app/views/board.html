@@ -29,6 +29,9 @@
         <p class="text-muted">{{challenge.Description}}</p>
         <div ng-include src="'/app/views/counter.html'"></div>
         <div ng-if="owner" ng-include src="'/app/views/repbar.html'"></div>
+        <div class="pull-right">
+          <a href="/{{account.ID}}/{{challenge.ID}}">Stats & details</a>
+        </div>
       </div>
     </div>
 
