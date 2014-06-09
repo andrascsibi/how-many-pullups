@@ -60,14 +60,14 @@ angular.module('pullApp')
     };
 
     var dayKey = function(set) {
-      return new Date(set.ts*1000)
-          .toISOString()
-          .substring(0, "2014-06-09".length);
+      var d = new Date(set.ts*1000);
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)
+          .toLocaleString();
     };
     var hourKey = function(set) {
-      return new Date(set.ts*1000)
-          .toISOString()
-          .substring(0, "2014-06-09T20".length);
+      var d = new Date(set.ts*1000);
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), 0, 0, 0)
+          .toLocaleString();
     };
 
     var histogram = function(sets, keyFun) {
