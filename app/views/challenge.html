@@ -5,7 +5,8 @@
   <h1>{{title}}</h1>
   <p class="text-muted">{{challenge.Description}}</p>
 
-  <div class="panel panel-default">
+  <div class="alert alert-danger" ng-show="empty">No data collected yet.</div>
+  <div class="panel panel-default" ng-hide="empty">
     <div class="panel-heading">
       <h3 class="panel-title">Stats between {{stats.minDate | date}} &mdash; {{stats.maxDate | date}}</h3>
     </div>

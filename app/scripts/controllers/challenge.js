@@ -6,6 +6,12 @@ angular.module('pullApp')
   $scope.challenge = challenge;
   $rootScope.title = challenge.AccountID + "'s " + challenge.Title + ' challenge';
 
+  if (allSets.length === 0) {
+    $scope.empty = true;
+    return;
+  }
+
+
   var parseDates = function(sets) {
     return sets
     .filter(function(cur) {
@@ -30,9 +36,6 @@ angular.module('pullApp')
   };
 
   var getStats = function(sets) {
-    if (sets.length === 0) {
-      return null;
-    }
     return sets.reduce(function(memo, cur) {
       memo.numSets++;
       memo.totalReps += cur.Reps;
