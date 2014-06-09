@@ -1,14 +1,12 @@
 angular.module('pullApp')
 
-.controller('BoardCtrl', ['$scope', '$rootScope', 'Account', 'Challenge', '$routeParams', 'WhoamiService',
-  function($scope, $rootScope, Account, Challenge, $routeParams, WhoamiService) {
+.controller('BoardCtrl', ['$scope', '$rootScope', 'Account', 'Challenge', '$routeParams', 'whoami',
+  function($scope, $rootScope, Account, Challenge, $routeParams, whoami) {
 
   $rootScope.title = $routeParams.id + "'s challenges";
 
-  WhoamiService().then(function(whoami) {
-    $scope.whoami = whoami;
-    $scope.owner = $routeParams.id === whoami.Account.ID;
-  });
+  $scope.whoami = whoami;
+  $scope.owner = whoami.owner;
 
   Account.get({id: $routeParams.id}, function(data){
     $scope.account = data;
@@ -19,18 +17,6 @@ angular.module('pullApp')
   });
 
   $scope.challenges = [];
-
-  // $scope.reloadChallenge = function(c) {
-  //   $scope.challenges.forEach(function(e, i) {
-  //     if (e.ID !== c.ID) return;
-  //     e.$get(function(data) {
-  //       $scope.challenges = $scope.challenges.map(function(e) {
-  //         if (e.ID !== c.ID) return e;
-  //         return data;
-  //       });
-  //     });
-  //   });
-  // };
 
   $scope.list = function() {
     Challenge.query({id: $routeParams.id}, function(data){

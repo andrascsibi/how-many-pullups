@@ -1,10 +1,11 @@
 angular.module('pullApp')
 
-.controller('ChallengeCtrl', ['$scope', '$rootScope', 'challenge', 'allSets', 'WhoamiService',
-  function($scope, $rootScope, challenge, allSets, WhoamiService) {
+.controller('ChallengeCtrl', ['$scope', '$rootScope', 'challenge', 'allSets', 'whoami',
+  function($scope, $rootScope, challenge, allSets, whoami) {
 
   $scope.challenge = challenge;
   $rootScope.title = challenge.AccountID + "'s " + challenge.Title + ' challenge';
+  $scope.whoami = whoami;
 
   if (allSets.length === 0) {
     $scope.empty = true;

@@ -14,6 +14,11 @@ angular.module('pullApp', [
       title: 'Counting Made Easy',
       controller: 'HomepageCtrl',
       templateUrl:'/app/views/index.html',
+      resolve: {
+        whoami: function(WhoamiService) {
+          return WhoamiService();
+        },
+      },
     })
     .when('/admin/accounts', {
       title: 'Accounts',
@@ -23,6 +28,11 @@ angular.module('pullApp', [
     .when('/:id', {
       controller:'BoardCtrl',
       templateUrl:'/app/views/board.html',
+      resolve: {
+        whoami: function(WhoamiService) {
+          return WhoamiService();
+        },
+      },
     })
     .when('/:id/:c_id', {
       controller:'ChallengeCtrl',
@@ -33,8 +43,11 @@ angular.module('pullApp', [
         },
         challenge: function(Challenge, $route) {
           return Challenge.get($route.current.params).$promise;
-        }
-      }
+        },
+        whoami: function(WhoamiService) {
+          return WhoamiService();
+        },
+      },
     })
     .otherwise({
       redirectTo:'/'

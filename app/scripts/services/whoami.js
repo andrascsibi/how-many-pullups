@@ -4,8 +4,9 @@ angular.module('pullApp')
   return function() {
     var delay = $q.defer();
     var promise = $http.get('/whoami');
-    promise.success(function(data, status, headers, config) {
-      delay.resolve(data);
+    promise.success(function(whoami, status, headers, config) {
+      whoami.owner = $route.current.params.id === whoami.Account.ID;
+      delay.resolve(whoami);
     }).
     error(function(data, status, headers, config) {
       delay.reject('Could not fetch whoami');

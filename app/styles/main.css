@@ -15,9 +15,12 @@
   }
 }
 
-
 .num-input {
   width: 60px;
+}
+
+.challenge-container {
+  max-width: 800px;
 }
 
 .stat {
@@ -28,3 +31,4 @@
   font-size: 1.5em;
   font-weight: bold;
 }
+

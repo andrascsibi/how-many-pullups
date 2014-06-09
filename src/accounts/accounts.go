@@ -553,7 +553,7 @@ func whoami(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError)
 	u := user.Current(c)
 
 	if u == nil {
-		url, err := user.LoginURL(c, "") // TODO: redirect?
+		url, err := user.LoginURL(c, "?redir=true")
 		if err != nil {
 			return nil, &handlerError{err, "Error getting login URL", http.StatusInternalServerError}
 		}
