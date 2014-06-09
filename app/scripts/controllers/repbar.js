@@ -18,9 +18,9 @@ angular.module('pullApp')
     var newSet = new Sets();
     newSet.Reps = reps;
     newSet.$save({id: $scope.challenge.AccountID, c_id: $scope.challenge.ID})
-    .then(function(){
+    .then(function(set){
       $scope.working = false;
-      $scope.list();
+      $scope.refresh($scope.challenge, set);
     }, function(err) {
       alert(err.data.error); // TODO
     });

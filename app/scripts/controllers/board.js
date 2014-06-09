@@ -26,6 +26,8 @@ angular.module('pullApp')
     });
   };
 
+  $scope.refresh = $scope.list;
+
   $scope.list();
 
   $scope.edited = null;
