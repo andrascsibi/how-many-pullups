@@ -14,7 +14,7 @@ angular.module('pullApp')
 
   $scope.refresh = function(c, newSet) {
     allSets.unshift(newSet);
-    process(allSets);
+    processedSets = process(allSets);
     hourlyCal.update($scope.cal.data);
     dailyCal.update($scope.cal.data);
   };
@@ -76,6 +76,7 @@ angular.module('pullApp')
         maxDate: timestampToDate(sets[0].ts),
       });
       stats.avgRepPerSet = stats.totalReps / stats.numSets;
+      stats.workDays = 1;
       return stats;
     };
 
@@ -121,17 +122,27 @@ angular.module('pullApp')
     $scope.stats.workDays = repsByDay.length;
     $scope.stats.avgRepPerDay = $scope.stats.totalReps / $scope.stats.workDays;
 
-    $scope.selectedDay = new Date();
-    $scope.dayStats = getStats(getDay(sets, $scope.selectedDay));
-
     $scope.cal = {
       data: toCalHeatmap(sets),
       hourlyLegend: getLegend(getPercentile(repsByHour, 0.9)),
       dailyLegend: getLegend(getPercentile(repsByDay, 0.9)),
     };
+
+    $scope.todayStats = getStats(getDay(sets, new Date()));
+
+    return {
+      selectDay: function(day) {
+          $scope.selectedDay = day;
+          $scope.dayStats = getStats(getDay(sets, $scope.selectedDay));
+          if (!$scope.$$phase) {
+            $scope.$apply();
+          }
+      }
+    };
   };
 
-  process(allSets);
+  var processedSets = process(allSets);
+  //processedSets.selectDay(new Date());
 
   var minDate = new Date($scope.stats.minDate);
   var maxDate = new Date($scope.stats.maxDate);
@@ -159,7 +170,9 @@ angular.module('pullApp')
       $scope.nextDisabled = reached;
     },
     onClick: function(date, value) {
-
+      if (date > now || date.toDateString() === new Date().toDateString()) return;
+      processedSets.selectDay(date);
+      highlightCal();
     },
   };
 
@@ -203,8 +216,13 @@ angular.module('pullApp')
     dailyCal.previous(STEPS);
   };
 
-  $interval(function() {
+  var highlightCal = function() {
     hourlyCal.highlight(new Date());
-  }, 60 * 1000);
+    if ($scope.selectedDay) {
+      dailyCal.highlight($scope.selectedDay);
+    }
+  };
+
+  $interval(highlightCal, 60 * 1000);
 
 }]);
