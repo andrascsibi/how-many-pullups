@@ -1,7 +1,7 @@
 angular.module('pullApp')
 
-.controller('ChallengeCtrl', ['$scope', '$rootScope', 'challenge', 'allSets', 'whoami',
-  function($scope, $rootScope, challenge, allSets, whoami) {
+.controller('ChallengeCtrl', ['$scope', '$rootScope', '$interval', 'challenge', 'allSets', 'whoami',
+  function($scope, $rootScope, $interval, challenge, allSets, whoami) {
 
   $scope.challenge = challenge;
   $rootScope.title = challenge.AccountID + "'s " + challenge.Title + ' challenge';
@@ -176,4 +176,9 @@ angular.module('pullApp')
     hourlyCal.previous(STEPS);
     dailyCal.previous(STEPS);
   };
+
+  $interval(function() {
+    hourlyCal.highlight(new Date());
+  }, 60 * 1000);
+
 }]);
