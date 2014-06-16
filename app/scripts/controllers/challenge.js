@@ -44,28 +44,48 @@ angular.module('pullApp')
       }, {});
     };
 
+    var getDay = function(sets, day) {
+      var dk = dayKey({ts:dateToTimestamp(day)});
+      return sets.filter(function(set) {
+        return dayKey(set) === dk;
+      });
+    };
+
+    var dateToTimestamp = function(d) {
+      return Math.round(Date.parse(d)/1000);
+    };
+
+    var timestampToDate = function(ts) {
+      return new Date(ts*1000);
+    };
+
     var getStats = function(sets) {
-      return sets.reduce(function(memo, cur) {
+      if (sets.length === 0) {
+        return null;
+      }
+      var stats = sets.reduce(function(memo, cur) {
         memo.numSets++;
-        memo.totalReps += cur.Reps;
-        memo.maxReps = Math.max(memo.maxReps, cur.Reps);
+        memo.totalReps += cur.reps;
+        memo.maxReps = Math.max(memo.maxReps, cur.reps);
         return memo;
       }, {
         numSets: 0,
         totalReps: 0,
         maxReps: 0,
-        minDate: sets[sets.length - 1].Date,
-        maxDate: sets[0].Date,
+        minDate: timestampToDate(sets[sets.length - 1].ts),
+        maxDate: timestampToDate(sets[0].ts),
       });
+      stats.avgRepPerSet = stats.totalReps / stats.numSets;
+      return stats;
     };
 
     var dayKey = function(set) {
-      var d = new Date(set.ts*1000);
+      var d = timestampToDate(set.ts);
       return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)
           .toLocaleString();
     };
     var hourKey = function(set) {
-      var d = new Date(set.ts*1000);
+      var d = timestampToDate(set.ts);
       return new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), 0, 0, 0)
           .toLocaleString();
     };
@@ -97,8 +117,12 @@ angular.module('pullApp')
     var repsByDay = histogram(sets, dayKey);
     var repsByHour = histogram(sets, hourKey);
 
-    $scope.stats = getStats(allSets);
+    $scope.stats = getStats(sets);
     $scope.stats.workDays = repsByDay.length;
+    $scope.stats.avgRepPerDay = $scope.stats.totalReps / $scope.stats.workDays;
+
+    $scope.selectedDay = new Date();
+    $scope.dayStats = getStats(getDay(sets, $scope.selectedDay));
 
     $scope.cal = {
       data: toCalHeatmap(sets),
@@ -108,7 +132,6 @@ angular.module('pullApp')
   };
 
   process(allSets);
-
 
   var minDate = new Date($scope.stats.minDate);
   var maxDate = new Date($scope.stats.maxDate);
@@ -134,6 +157,9 @@ angular.module('pullApp')
     },
     onMaxDomainReached: function(reached) {
       $scope.nextDisabled = reached;
+    },
+    onClick: function(date, value) {
+
     },
   };
 

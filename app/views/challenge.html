@@ -5,9 +5,21 @@
   <p class="text-muted">{{challenge.Description}}</p>
 
   <div class="alert alert-danger" ng-show="empty">No data collected yet.</div>
+
+  <div class="panel panel-success" ng-if="whoami.owner">
+    <div class="panel-heading">
+      <div class="panel-title">I'm done with a set. I did this many reps:</div>
+    </div>
+    <div class="panel-body">
+      <div ng-include src="'/app/views/repbar.html'"></div>
+    </div>
+  </div>
+
   <div class="panel panel-default" ng-hide="empty">
     <div class="panel-heading">
-      <h3 class="panel-title">Stats between {{stats.minDate | date}} &mdash; {{stats.maxDate | date}}</h3>
+      <h3 class="panel-title">Stats between {{stats.minDate | date}} &mdash; {{stats.maxDate | date}}
+        <span class="text-success">vs {{selectedDay | date}}</span>
+    </h3>
     </div>
     <div class="panel-body">
       <div class="container-fluid">
@@ -15,40 +27,37 @@
           <div class="col-sm-4 stat">
             Total reps
             <div class="stat-num">{{stats.totalReps | number: 0}}</div>
+            <div class="stat-num text-success">{{dayStats.totalReps | number: 0}}</div>
           </div>
           <div class="col-sm-4 stat">
             Total sets
             <div class="stat-num">{{stats.numSets | number: 0}}</div>
+            <div class="stat-num text-success">{{dayStats.numSets | number: 0}}</div>
           </div>
           <div class="col-sm-4 stat">
             Avg. reps per set
-            <div class="stat-num">{{stats.totalReps / stats.numSets | number: 2}}</div>
+            <div class="stat-num">{{stats.avgRepPerSet | number: 2}}</div>
+            <div class="stat-num text-success">{{dayStats.avgRepPerSet | number: 2}}</div>
           </div>
         </div>
         <div class="row">
           <div class="col-sm-4 stat">
             Max reps
             <div class="stat-num">{{stats.maxReps | number: 0}}</div>
+            <div class="stat-num text-success">{{dayStats.maxReps | number: 0}}</div>
           </div>
           <div class="col-sm-4 stat">
             Number of workdays
             <div class="stat-num">{{stats.workDays | number: 0}}</div>
+            <div class="stat-num text-success">1</div>
           </div>
           <div class="col-sm-4 stat">
             Avg. reps per day
             <div class="stat-num">{{stats.totalReps / stats.workDays | number: 2}}</div>
+            <div class="stat-num text-success">{{dayStats.totalReps | number: 2}}</div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <div class="panel panel-success" ng-if="whoami.owner">
-    <div class="panel-heading">
-      <div class="panel-title">I'm done with a set. I did this many reps</div>
-    </div>
-    <div class="panel-body">
-      <div ng-include src="'/app/views/repbar.html'"></div>
     </div>
   </div>
 
