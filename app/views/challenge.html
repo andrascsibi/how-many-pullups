@@ -43,7 +43,14 @@
     </div>
   </div>
 
-  <div ng-if="whoami.owner" ng-include src="'/app/views/repbar.html'"></div>
+  <div class="panel panel-success" ng-if="whoami.owner">
+    <div class="panel-heading">
+      <div class="panel-title">I'm done with a set. I did this many reps</div>
+    </div>
+    <div class="panel-body">
+      <div ng-include src="'/app/views/repbar.html'"></div>
+    </div>
+  </div>
 
   <div id="cal-heatmap-hourly"></div>
   <div id="cal-heatmap-daily"></div>
