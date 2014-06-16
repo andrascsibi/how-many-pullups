@@ -4,8 +4,6 @@
   <h1>{{challenge.Title}} <small ng-if="!whoami.owner">by {{challenge.AccountID}}</small></h1>
   <p class="text-muted">{{challenge.Description}}</p>
 
-  <div class="alert alert-danger" ng-show="empty">No data collected yet.</div>
-
   <div class="panel panel-success" ng-if="whoami.owner">
     <div class="panel-heading">
       <div class="panel-title">I'm done with a set. I did this many reps:</div>
@@ -14,6 +12,8 @@
       <div ng-include src="'/app/views/repbar.html'"></div>
     </div>
   </div>
+
+  <div class="alert alert-danger" ng-show="empty">No data collected yet.</div>
 
   <div class="panel panel-default" ng-hide="empty">
     <div class="panel-heading">
