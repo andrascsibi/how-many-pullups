@@ -32,6 +32,9 @@ type Account struct {
 	EmailMD5   string
 	ScreenName string
 	RegDate    time.Time
+
+	Following []string
+	Followers []string
 }
 
 type Profile struct {
@@ -70,6 +73,10 @@ func init() {
 		Methods("GET")
 	r.Handle("/accounts",
 		handler(createAccount)).
+		Methods("POST")
+
+	r.Handle("/follow/{follower}/{followee}",
+		handler(follow)).
 		Methods("POST")
 
 	r.Handle("/accounts/{accountId}",
@@ -152,7 +159,12 @@ func (fn handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func getAccounts(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
-	// TODO authorization
+
+	authE := authorize(c, nil)
+	if authE != nil {
+		return nil, authE
+	}
+
 	q := datastore.NewQuery("Accounts").Order("-RegDate").Limit(100)
 	as := make([]Account, 0)
 	_, err := q.GetAll(c, &as)
@@ -176,12 +188,9 @@ func createAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handle
 		return nil, &handlerError{e, "Could not parse JSON", http.StatusBadRequest}
 	}
 
-	u := user.Current(c)
-	if u == nil {
-		return nil, &handlerError{e, "Login requried", http.StatusForbidden}
-	}
-	if u.Email != newAccount.Email && u.Admin {
-		return nil, &handlerError{e, "Unauthorized", http.StatusUnauthorized}
+	authE := authorize(c, &newAccount)
+	if authE != nil {
+		return nil, authE
 	}
 
 	accByEmail, err := getAccountByEmail(c, newAccount.Email)
@@ -235,24 +244,57 @@ func getAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerEr
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
 
-	var account Account
-	err := datastore.Get(c, accountKey(c, accountId), &account)
-
-	if err == datastore.ErrNoSuchEntity {
-		return nil, &handlerError{err, "Account not found", http.StatusNotFound}
-	} else if err != nil {
-		return nil, &handlerError{err, "Error getting account", http.StatusInternalServerError}
+	account, err := getAccountById(c, accountId)
+	if err != nil {
+		return nil, err
 	}
 
-	account.EmailMD5 = md5hex(account.Email)
 	account.Email = ""
-	if account.ScreenName == "" {
-		a := []rune(account.ID)
-		a[0] = unicode.ToUpper(a[0])
-		account.ScreenName = string(a)
+	return account, nil
+}
+
+func follow(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
+	c := appengine.NewContext(r)
+	follower := mux.Vars(r)["follower"]
+	followee := mux.Vars(r)["followee"]
+
+	followerA, err := getAccountById(c, follower)
+	if err != nil {
+		return nil, err
 	}
 
-	return account, nil
+	followeeA, err := getAccountById(c, followee)
+	if err != nil {
+		return nil, err
+	}
+
+	authE := authorize(c, followerA)
+	if authE != nil {
+		return nil, authE
+	}
+
+	// TODO idempotent
+	// TODO unfollow
+	followerA.Following = append(followerA.Following, followee)
+	followeeA.Followers = append(followeeA.Followers, follower)
+
+	trErr := datastore.RunInTransaction(c, func(c appengine.Context) error {
+		_, err := datastore.Put(c, accountKey(c, follower), &followerA)
+		if err != nil {
+			return err
+		}
+		_, err = datastore.Put(c, accountKey(c, followee), &followeeA)
+		if err != nil {
+			return err
+		}
+		return nil
+	}, nil)
+
+	if trErr != nil {
+		return nil, &handlerError{trErr, "could not set relationship", http.StatusInternalServerError}
+	}
+
+	return followerA, nil
 }
 
 func updateAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
@@ -266,13 +308,6 @@ func updateAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handle
 func getChallenges(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]
-
-	// TODO: check account exists
-
-	// account, err := getAccount(w, r)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	q := datastore.NewQuery("Challenges").
 		Ancestor(accountKey(c, accountId)).
@@ -290,9 +325,16 @@ func getChallenges(w http.ResponseWriter, r *http.Request) (interface{}, *handle
 func createChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 
-	// TODO: authorization
-	// TODO: check account exists
 	accountId := mux.Vars(r)["accountId"]
+	account, err := getAccountById(c, accountId)
+	if err != nil {
+		return nil, err
+	}
+
+	authE := authorize(c, account)
+	if authE != nil {
+		return nil, authE
+	}
 
 	data, e := ioutil.ReadAll(r.Body)
 	if e != nil {
@@ -340,6 +382,16 @@ func updateChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *hand
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 	_ = c
+
+	account, err := getAccountById(c, accountId)
+	if err != nil {
+		return nil, err
+	}
+
+	authE := authorize(c, account)
+	if authE != nil {
+		return nil, authE
+	}
 
 	challenge, err := getChallenge(w, r)
 	if err != nil {
@@ -412,6 +464,16 @@ func importCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
+	account, aerr := getAccountById(c, accountId)
+	if aerr != nil {
+		return nil, aerr
+	}
+
+	authE := authorize(c, account)
+	if authE != nil {
+		return nil, authE
+	}
+
 	csvIn := csv.NewReader(r.Body)
 	importedSets := make([]WorkSet, 0, 1000)
 
@@ -446,7 +508,6 @@ func importCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 		importedSets = append(importedSets, WorkSet{Date: date, Reps: reps})
 	}
 
-	//	key := workSetKey(c, accountId, challengeId)
 	keys := make([]*datastore.Key, len(importedSets))
 	for i := 0; i < len(importedSets); i++ {
 		keys[i] = workSetKey(c, accountId, challengeId)
@@ -504,8 +565,15 @@ func createSet(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
-	// TODO authorization
-	// TODO check if challenge exists
+	account, err := getAccountById(c, accountId)
+	if err != nil {
+		return nil, err
+	}
+
+	authE := authorize(c, account)
+	if authE != nil {
+		return nil, authE
+	}
 
 	data, e := ioutil.ReadAll(r.Body)
 	if e != nil {
@@ -539,6 +607,39 @@ func challengeKey(c appengine.Context, accountId string, id string) *datastore.K
 
 func workSetKey(c appengine.Context, accountId string, challengeId string) *datastore.Key {
 	return datastore.NewIncompleteKey(c, "WorkSets", challengeKey(c, accountId, challengeId))
+}
+
+func authorize(c appengine.Context, a *Account) *handlerError {
+	u := user.Current(c)
+	if u == nil {
+		return &handlerError{nil, "Login requried", http.StatusForbidden}
+	}
+	if u.Admin {
+		return nil
+	}
+	if a == nil || u.Email != a.Email {
+		return &handlerError{nil, "Unauthorized", http.StatusUnauthorized}
+	}
+	return nil
+}
+
+func getAccountById(c appengine.Context, id string) (*Account, *handlerError) {
+	var account Account
+	err := datastore.Get(c, accountKey(c, id), &account)
+
+	if err == datastore.ErrNoSuchEntity {
+		return nil, &handlerError{err, "Account not found", http.StatusNotFound}
+	} else if err != nil {
+		return nil, &handlerError{err, "Error getting account", http.StatusInternalServerError}
+	}
+
+	account.EmailMD5 = md5hex(account.Email)
+	if account.ScreenName == "" {
+		a := []rune(account.ID)
+		a[0] = unicode.ToUpper(a[0])
+		account.ScreenName = string(a)
+	}
+	return &account, nil
 }
 
 func getAccountByEmail(c appengine.Context, email string) (*Account, error) {
