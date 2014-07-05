@@ -10,6 +10,7 @@ import (
 	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
+	"unicode"
 
 	"io"
 	"io/ioutil"
@@ -245,6 +246,11 @@ func getAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerEr
 
 	account.EmailMD5 = md5hex(account.Email)
 	account.Email = ""
+	if account.ScreenName == "" {
+		a := []rune(account.ID)
+		a[0] = unicode.ToUpper(a[0])
+		account.ScreenName = string(a)
+	}
 
 	return account, nil
 }

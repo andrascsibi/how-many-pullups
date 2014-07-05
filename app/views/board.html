@@ -4,18 +4,17 @@
 
 <div ng-hide="notFound" class="container">
 
+  <div ng-include src="'/app/views/profile.html'"></div>
+
   <div class="page-header">
-    <h2 ng-show="owner">
-      My Challenges
     <button ng-if="owner" ng-disabled="edited" class="btn btn-primary pull-right" ng-click="add()">
       <i class="fa fa-plus"></i> Add challenge
     </button>
 
-    </h2>
-    <h2 ng-hide="owner">{{account.ID}}'s Challenges</h2>
-    <p>email: {{account.Email}}</p>
-    <p>email md5: {{account.EmailMD5}}</p>
+    <h2>{{account.ScreenName}}'s Challenges</h2>
+
   </div>
+
 
   <div ng-repeat="challenge in challenges">
     <div class="panel panel-default" ng-if="edited.ID != challenge.ID">
