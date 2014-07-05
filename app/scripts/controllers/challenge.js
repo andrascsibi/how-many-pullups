@@ -1,26 +1,29 @@
 angular.module('pullApp')
 
-.controller('ChallengeCtrl', ['$scope', '$rootScope', '$interval', 'challenge', 'allSets', 'whoami',
-  function($scope, $rootScope, $interval, challenge, allSets, whoami) {
+.controller('ChallengeCtrl', ['$scope', '$rootScope', '$route', '$interval', 'challenge', 'allSets', 'whoami',
+  function($scope, $rootScope, $route, $interval, challenge, allSets, whoami) {
 
   $scope.challenge = challenge;
   $rootScope.title = challenge.AccountID + "'s " + challenge.Title + ' challenge';
   $scope.whoami = whoami;
 
-  if (allSets.length === 0) {
-    $scope.empty = true;
-    return;
-  }
-
   $scope.refresh = function(c, newSet) {
+    if ($scope.empty) {
+      $route.reload();
+      return;
+    }
     allSets.unshift(newSet);
     processedSets = process(allSets);
     hourlyCal.update($scope.cal.data);
     dailyCal.update($scope.cal.data);
   };
 
-  var process = function(allSets) {
+  if (allSets.length === 0) {
+    $scope.empty = true;
+    return;
+  }
 
+  var process = function(allSets) {
     var parseDates = function(sets) {
       return sets
       .filter(function(cur) {

@@ -11,10 +11,8 @@
       <i class="fa fa-plus"></i> Add challenge
     </button>
 
-    <h2>{{account.ScreenName}}'s Challenges</h2>
-
+    <h3>{{account.ScreenName}}'s Challenges</h3>
   </div>
-
 
   <div ng-repeat="challenge in challenges">
     <div class="panel panel-default" ng-if="edited.ID != challenge.ID">
