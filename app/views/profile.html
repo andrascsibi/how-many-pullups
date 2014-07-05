@@ -7,7 +7,10 @@
 
 
           <div class="col-xs-12 col-sm-8">
-            <h2>{{account.ScreenName}}</h2>
+            <h2>
+              {{account.ScreenName}}
+              <button class="btn btn-success pull-right"><span class="fa fa-star-o"></span> Follow </button>
+            </h2>
               <p class="text-muted">
                 <span class="fa fa-clock-o"></span>
                 Joined {{account.RegDate | date: 'MMMM yyyy'}}
@@ -17,16 +20,15 @@
 
 
           <div class="col-xs-12 col-sm-4">
-              <h2><strong> 20,7K </strong></h2>
+              <h2>4</h2>
               <p><small>Followers</small></p>
           </div><!--/col-->
           <div class="col-xs-12 col-sm-4">
-              <h2><strong>245</strong></h2>
+              <h2><strong>24</strong></h2>
               <p><small>Following</small></p>
           </div><!--/col-->
         </div><!--/row-->
 
-        <button class="btn btn-success pull-right"><span class="fa fa-plus"></span> Follow </button>
 
 
     </div>
