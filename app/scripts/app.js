@@ -15,9 +15,9 @@ angular.module('pullApp', [
       controller: 'HomepageCtrl',
       templateUrl:'/app/views/index.html',
       resolve: {
-        whoami: function(WhoamiService) {
+        whoami: ['WhoamiService', function(WhoamiService) {
           return WhoamiService();
-        },
+        }],
       },
     })
     .when('/admin/accounts', {
@@ -29,24 +29,24 @@ angular.module('pullApp', [
       controller:'BoardCtrl',
       templateUrl:'/app/views/board.html',
       resolve: {
-        whoami: function(WhoamiService) {
+        whoami: ['WhoamiService', function(WhoamiService) {
           return WhoamiService();
-        },
+        }],
       },
     })
     .when('/:id/:c_id', {
       controller:'ChallengeCtrl',
       templateUrl:'/app/views/challenge.html',
       resolve: {
-        allSets: function(AllSets, $route) {
+        allSets: ['AllSets', '$route', function(AllSets, $route) {
           return AllSets.query($route.current.params).$promise;
-        },
-        challenge: function(Challenge, $route) {
+        }],
+        challenge: ['Challenge', '$route', function(Challenge, $route) {
           return Challenge.get($route.current.params).$promise;
-        },
-        whoami: function(WhoamiService) {
+        }],
+        whoami: ['WhoamiService', function(WhoamiService) {
           return WhoamiService();
-        },
+        }],
       },
     })
     .otherwise({
