@@ -4,9 +4,11 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 
+	"crypto/md5"
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/csv"
+	"encoding/hex"
 	"encoding/json"
 
 	"io"
@@ -24,9 +26,11 @@ import (
 )
 
 type Account struct {
-	Email   string
-	ID      string
-	RegDate time.Time
+	ID         string
+	Email      string
+	EmailMD5   string
+	ScreenName string
+	RegDate    time.Time
 }
 
 type Profile struct {
@@ -238,6 +242,9 @@ func getAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerEr
 	} else if err != nil {
 		return nil, &handlerError{err, "Error getting account", http.StatusInternalServerError}
 	}
+
+	account.EmailMD5 = md5hex(account.Email)
+	account.Email = ""
 
 	return account, nil
 }
@@ -588,4 +595,10 @@ func hash(id string) string {
 	io.WriteString(hasher, id)
 	io.WriteString(hasher, "salt it real good DbqOFzkk") // TODO: should come from environment
 	return base64.URLEncoding.EncodeToString(hasher.Sum(nil))[:8]
+}
+
+func md5hex(src string) string {
+	hasher := md5.New()
+	io.WriteString(hasher, src)
+	return hex.EncodeToString(hasher.Sum(nil))
 }

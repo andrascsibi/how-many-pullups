@@ -13,6 +13,8 @@
 
     </h2>
     <h2 ng-hide="owner">{{account.ID}}'s Challenges</h2>
+    <p>email: {{account.Email}}</p>
+    <p>email md5: {{account.EmailMD5}}</p>
   </div>
 
   <div ng-repeat="challenge in challenges">
