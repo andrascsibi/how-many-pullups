@@ -75,7 +75,7 @@ func init() {
 		handler(createAccount)).
 		Methods("POST")
 
-	r.Handle("/follow/{follower}/{followee}",
+	r.Handle("/accounts/{op:follow|unfollow}/{follower}/{followee}",
 		handler(follow)).
 		Methods("POST")
 
@@ -234,7 +234,7 @@ func validate(username string) error {
 	if !matches {
 		return errors.New("Username must be between 3 and 30 characters long, must start with a lowercase letter, and can only contain lowercase letters, numbers, and the '-' character.")
 	}
-	if username == "admin" {
+	if indexOf([]string{"admin", "follow", "unfollow"}, username) >= 0 {
 		return errors.New("Invalid username.")
 	}
 	return nil
@@ -253,10 +253,34 @@ func getAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerEr
 	return account, nil
 }
 
+func indexOf(list []string, item string) int {
+	for i, s := range list {
+		if s == item {
+			return i
+		}
+	}
+	return -1
+}
+func add(list []string, item string) []string {
+	i := indexOf(list, item)
+	if i >= 0 {
+		return list
+	}
+	return append(list, item)
+}
+func remove(list []string, item string) []string {
+	i := indexOf(list, item)
+	if i < 0 {
+		return list
+	}
+	return append(list[:i], list[i+1:]...)
+}
+
 func follow(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	follower := mux.Vars(r)["follower"]
 	followee := mux.Vars(r)["followee"]
+	unfollow := mux.Vars(r)["op"] == "unfollow"
 
 	followerA, err := getAccountById(c, follower)
 	if err != nil {
@@ -273,22 +297,25 @@ func follow(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError)
 		return nil, authE
 	}
 
-	// TODO idempotent
-	// TODO unfollow
-	followerA.Following = append(followerA.Following, followee)
-	followeeA.Followers = append(followeeA.Followers, follower)
+	if unfollow {
+		followerA.Following = remove(followerA.Following, followee)
+		followeeA.Followers = remove(followeeA.Followers, follower)
+	} else {
+		followerA.Following = add(followerA.Following, followee)
+		followeeA.Followers = add(followeeA.Followers, follower)
+	}
 
 	trErr := datastore.RunInTransaction(c, func(c appengine.Context) error {
-		_, err := datastore.Put(c, accountKey(c, follower), &followerA)
+		_, err := datastore.Put(c, accountKey(c, follower), followerA)
 		if err != nil {
 			return err
 		}
-		_, err = datastore.Put(c, accountKey(c, followee), &followeeA)
+		_, err = datastore.Put(c, accountKey(c, followee), followeeA)
 		if err != nil {
 			return err
 		}
 		return nil
-	}, nil)
+	}, &datastore.TransactionOptions{XG: true})
 
 	if trErr != nil {
 		return nil, &handlerError{trErr, "could not set relationship", http.StatusInternalServerError}
@@ -520,6 +547,7 @@ func importCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 	return nil, nil
 }
 
+// TODO only works for utc
 func getStats(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
 	c := appengine.NewContext(r)
 	accountId := mux.Vars(r)["accountId"]

@@ -1,20 +1,21 @@
 angular.module('pullApp')
 
-.controller('BoardCtrl', ['$scope', '$rootScope', 'Account', 'Challenge', '$routeParams', 'whoami',
-  function($scope, $rootScope, Account, Challenge, $routeParams, whoami) {
+.controller('BoardCtrl', ['$scope', '$rootScope', 'Challenge', '$routeParams', 'whoami', 'account',
+  function($scope, $rootScope, Challenge, $routeParams, whoami, account) {
 
   $rootScope.title = $routeParams.id + "'s challenges";
 
   $scope.whoami = whoami;
   $scope.owner = whoami.owner;
+  $scope.account = account;
 
-  Account.get({id: $routeParams.id}, function(data){
-    $scope.account = data;
-  }, function(err) {
-    if (err.status === 404) {
-      $scope.notFound = true;
-    }
-  });
+  // TODO: error page?
+  // Account.get({id: $routeParams.id}, function(data){
+  // }, function(err) {
+  //   if (err.status === 404) {
+  //     $scope.notFound = true;
+  //   }
+  // });
 
   $scope.challenges = [];
 

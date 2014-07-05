@@ -1,35 +1,49 @@
-  <div class="row">
-    <div class="col-md-8">
-        <div class="row">
-          <div class="col-xs-12 col-sm-4 text-center">
-            <img src="http://www.gravatar.com/avatar/{{account.EmailMD5}}?d=retro&s=199" alt="" class="center-block img-responsive">
-          </div><!--/col-->
+<div class="row" ng-controller="ProfileCtrl">
+  <div class="col-md-8">
+      <div class="row">
+        <div class="col-xs-12 col-sm-4 text-center">
+          <img src="http://www.gravatar.com/avatar/{{account.EmailMD5}}?d=retro&s=199" alt="" class="center-block img-responsive">
+        </div><!--/col-->
 
 
-          <div class="col-xs-12 col-sm-8">
-            <h2>
-              {{account.ScreenName}}
-              <button class="btn btn-success pull-right"><span class="fa fa-star-o"></span> Follow </button>
-            </h2>
-              <p class="text-muted">
-                <span class="fa fa-clock-o"></span>
-                Joined {{account.RegDate | date: 'MMMM yyyy'}}
-              </p>
-              <p>{{account.About}}</p>
-          </div><!--/col-->
+        <div class="col-xs-12 col-sm-8">
+          <h2>
+            {{account.ScreenName}}
+            <span ng-hide="account.ID === whoami.Account.ID">
 
+              <button class="follow btn pull-right" ng-class="{'btn-danger': mayUnfollow && following, 'btn-default': following && !mayUnfollow, 'btn-success': !following}" ng-click="follow()" ng-mouseenter="mayUnfollow = true" ng-mouseleave="mayUnfollow = false" ng-disabled="working">
 
-          <div class="col-xs-12 col-sm-4">
-              <h2>4</h2>
-              <p><small>Followers</small></p>
-          </div><!--/col-->
-          <div class="col-xs-12 col-sm-4">
-              <h2><strong>24</strong></h2>
-              <p><small>Following</small></p>
-          </div><!--/col-->
-        </div><!--/row-->
+                <span ng-show="following && mayUnfollow">
+                  <span class="fa fa-star-half-o"></span> Unfollow
+                </span>
+                <span ng-show="following && !mayUnfollow">
+                  <span class="fa fa-star"></span>
+                  Following
+                </span>
+                <span ng-show="!following">
+                  <span class="fa fa-star-o"></span>
+                  Follow
+                </span>
 
+              </button>
 
+            </span>
 
-    </div>
+          </h2>
+            <p class="text-muted">
+              <span class="fa fa-clock-o"></span>
+              Joined {{account.RegDate | date: 'MMMM yyyy'}}
+            </p>
+            <p>{{account.About}}</p>
+        </div><!--/col-->
+
+        <div ng-repeat="what in ['Followers', 'Following']" class="col-xs-12 col-sm-4">
+            <h3><strong>{{account[what].length || 0}}</strong> <small>{{what}}</small></h3>
+
+            <span ng-repeat="f in account[what]">
+             <a href="/{{f}}">{{f}}</a><span ng-hide="$last">,</span>
+        </div><!--/col-->
+      </div><!--/row-->
+
   </div>
+</div>

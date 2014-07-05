@@ -32,6 +32,9 @@ angular.module('pullApp', [
         whoami: ['WhoamiService', function(WhoamiService) {
           return WhoamiService();
         }],
+        account: ['Account', '$route', function(Account, $route) {
+          return Account.get($route.current.params).$promise;
+        }]
       },
     })
     .when('/:id/:c_id', {

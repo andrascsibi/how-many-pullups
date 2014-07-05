@@ -1,7 +1,7 @@
 <div ng-include src="'/app/views/navbar.html'"></div>
 
 <div class="container challenge-container">
-  <h1>{{challenge.Title}} <small ng-if="!whoami.owner">by {{challenge.AccountID}}</small></h1>
+  <h1>{{challenge.Title}} <small ng-if="!whoami.owner">by <a href ="/{{challenge.AccountID}}">{{challenge.AccountID}}</a></small></h1>
   <p class="text-muted">{{challenge.Description}}</p>
 
   <div class="panel panel-success" ng-if="whoami.owner">
