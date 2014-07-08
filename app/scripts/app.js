@@ -2,6 +2,8 @@ angular.module('pullApp', [
   'ngRoute',
   'ngResource',
   'mgcrea.ngStrap',
+  'angulartics',
+  'angulartics.google.analytics',
 ])
 
 .config(['$routeProvider', '$locationProvider',
