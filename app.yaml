@@ -19,7 +19,7 @@ handlers:
 - url: /bower_components
   static_dir: bower_components
 
-- url: /(.*\.(ico|html))$
+- url: /(.*\.(ico|png|html))$
   static_files: app/\1
   upload: app/(.*)
 
