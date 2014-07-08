@@ -35,7 +35,7 @@ angular.module('pullApp')
 
   $scope.add = function() {
     var newChallenge = new Challenge();
-    newChallenge.Title = 'Pullups';
+    newChallenge.Title = 'Pull-ups';
     newChallenge.Description = '';
     newChallenge.MaxReps = 10;
     newChallenge.StepReps = 1;
