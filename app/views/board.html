@@ -27,7 +27,7 @@
           </h3>
         </div>
         <div class="panel-body">
-          <p class="text-muted">{{challenge.Description}}</p>
+          <div class="text-muted" ng-bind-html="challenge.Description | linky:'_blank'"></div>
           <div ng-include src="'/app/views/counter.html'"></div>
           <div ng-if="owner" ng-include src="'/app/views/repbar.html'"></div>
           <div class="pull-right">

@@ -1,6 +1,7 @@
 angular.module('pullApp', [
   'ngRoute',
   'ngResource',
+  'ngSanitize',
   'mgcrea.ngStrap',
   'angulartics',
   'angulartics.google.analytics',

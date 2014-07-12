@@ -2,7 +2,7 @@
 
 <div class="container challenge-container">
   <h1>{{challenge.Title}} <small ng-if="!whoami.owner">by <a href ="/{{challenge.AccountID}}">{{challenge.AccountID}}</a></small></h1>
-  <p class="text-muted">{{challenge.Description}}</p>
+  <p class="text-muted" ng-bind-html="challenge.Description | linky:'_blank'"></p>
 
   <div class="panel panel-success" ng-if="whoami.owner">
     <div class="panel-heading">
