@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"encoding/json"
+	"fmt"
 
 	"appengine"
 )
@@ -19,7 +20,7 @@ type handler struct {
 }
 
 func New(hf handlerFun) http.Handler {
-	return Handler
+	return handler{hf}
 }
 
 type handlerFun func(w http.ResponseWriter, r *http.Request) (interface{}, *Error)

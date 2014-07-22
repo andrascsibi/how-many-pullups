@@ -1,16 +1,14 @@
-package hanlder
+package handler
 
 import (
-	"reflect"
 	"testing"
 
-	"httptest"
-
-	"appengine/mail"
+	"net/http"
+	"net/http/httptest"
 )
 
 func simpleHandler(w http.ResponseWriter, r *http.Request) (interface{}, *Error) {
-	return struct{ Msg string }{"hello"}
+	return struct{ Msg string }{"hello"}, nil
 }
 
 func TestSimpleHandler(t *testing.T) {
