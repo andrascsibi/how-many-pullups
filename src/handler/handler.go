@@ -15,21 +15,29 @@ type Error struct {
 	Code    int
 }
 
+type ctxGetter func(r *http.Request) appengine.Context
+type handlerFun func(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *Error)
+
 type handler struct {
-	hf handlerFun
+	handlerFun    handlerFun
+	contextGetter ctxGetter
 }
 
 func New(hf handlerFun) http.Handler {
-	return handler{hf}
+	return handler{hf, ctxGetter(func(r *http.Request) appengine.Context {
+		return appengine.NewContext(r)
+	})}
 }
 
-type handlerFun func(w http.ResponseWriter, r *http.Request) (interface{}, *Error)
+func WithContext(hf handlerFun, cg ctxGetter) http.Handler {
+	return handler{hf, cg}
+}
 
 // Handler implements the http.Handler interface
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	c := appengine.NewContext(r)
-	response, err := h.hf(w, r)
+	c := h.contextGetter(r)
+	response, err := h.handlerFun(c, w, r)
 
 	if err != nil {
 		c.Errorf("%v", err.Error)
