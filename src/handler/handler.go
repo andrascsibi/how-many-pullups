@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"encoding/json"
-	"fmt"
 
 	"appengine"
 )
@@ -41,7 +40,7 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		c.Errorf("%v", err.Error)
-		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Message), err.Code)
+		http.Error(w, err.Message, err.Code)
 		return
 	}
 	if response == nil {
