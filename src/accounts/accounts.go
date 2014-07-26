@@ -24,6 +24,8 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
+
+	"../handler"
 )
 
 type Account struct {
@@ -42,31 +44,14 @@ type Profile struct {
 type Settings struct {
 }
 
-type Challenge struct {
-	AccountID    string
-	ID           string
-	Title        string
-	Description  string
-	MaxReps      int
-	StepReps     int
-	CreationDate time.Time
-}
-
 type WorkSet struct {
 	Reps int
 	Date time.Time
 }
 
-type ChallengeStat struct {
-	Today   int
-	Total   int
-	MinDate time.Time
-	MaxDate time.Time
-}
-
 func init() {
 	r := mux.NewRouter()
-	r.Handle("/whoami", handler(whoami)).Methods("GET")
+	r.Handle("/whoami", handler.Handler(whoami)).Methods("GET")
 
 	r.Handle("/accounts",
 		handler(getAccounts)).
@@ -84,20 +69,6 @@ func init() {
 		Methods("GET")
 	r.Handle("/accounts/{accountId}",
 		handler(createAccount)). // TODO update?
-		Methods("POST")
-
-	r.Handle("/accounts/{accountId}/challenges",
-		handler(getChallenges)).
-		Methods("GET")
-	r.Handle("/accounts/{accountId}/challenges",
-		handler(createChallenge)).
-		Methods("POST")
-
-	r.Handle("/accounts/{accountId}/challenges/{challengeId}",
-		handler(getChallenge)).
-		Methods("GET")
-	r.Handle("/accounts/{accountId}/challenges/{challengeId}",
-		handler(updateChallenge)).
 		Methods("POST")
 
 	r.Handle("/accounts/{accountId}/challenges/{challengeId}/stats",
@@ -124,41 +95,7 @@ func init() {
 	http.Handle("/", r)
 }
 
-type handlerError struct {
-	Error   error
-	Message string
-	Code    int
-}
-
-type handler func(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError)
-
-// handler implements the http.Handler interface
-func (fn handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
-	c := appengine.NewContext(r)
-	response, err := fn(w, r)
-
-	if err != nil {
-		c.Errorf("%v", err.Error)
-		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Message), err.Code)
-		return
-	}
-	if response == nil {
-		return
-	}
-
-	bytes, e := json.Marshal(response)
-	if e != nil {
-		http.Error(w, "Error marshalling JSON", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(bytes)
-}
-
-func getAccounts(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
+func getAccounts(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
 
 	authE := authorize(c, nil)
 	if authE != nil {
@@ -174,8 +111,7 @@ func getAccounts(w http.ResponseWriter, r *http.Request) (interface{}, *handlerE
 	return as, nil
 }
 
-func createAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
+func createAccount(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
 
 	data, e := ioutil.ReadAll(r.Body)
 	if e != nil {
@@ -240,8 +176,7 @@ func validate(username string) error {
 	return nil
 }
 
-func getAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
+func getAccount(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 
 	account, err := getAccountById(c, accountId)
@@ -276,8 +211,7 @@ func remove(list []string, item string) []string {
 	return append(list[:i], list[i+1:]...)
 }
 
-func follow(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
+func follow(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
 	follower := mux.Vars(r)["follower"]
 	followee := mux.Vars(r)["followee"]
 	unfollow := mux.Vars(r)["op"] == "unfollow"
@@ -324,135 +258,14 @@ func follow(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError)
 	return followerA, nil
 }
 
-func updateAccount(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
+func updateAccount(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 	_ = c
 	_ = accountId
 	return nil, &handlerError{errors.New("updating account not supported"), "", http.StatusMethodNotAllowed}
 }
 
-func getChallenges(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
-	accountId := mux.Vars(r)["accountId"]
-
-	q := datastore.NewQuery("Challenges").
-		Ancestor(accountKey(c, accountId)).
-		Order("-CreationDate")
-	challenges := make([]Challenge, 0)
-	_, e := q.GetAll(c, &challenges)
-
-	if e != nil {
-		return nil, &handlerError{e, "Error querying datastore", http.StatusInternalServerError}
-	}
-
-	return challenges, nil
-}
-
-func createChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
-
-	accountId := mux.Vars(r)["accountId"]
-	account, err := getAccountById(c, accountId)
-	if err != nil {
-		return nil, err
-	}
-
-	authE := authorize(c, account)
-	if authE != nil {
-		return nil, authE
-	}
-
-	data, e := ioutil.ReadAll(r.Body)
-	if e != nil {
-		return nil, &handlerError{e, "Could not read request", http.StatusBadRequest}
-	}
-
-	var challenge Challenge
-	e = json.Unmarshal(data, &challenge)
-	if e != nil {
-		return nil, &handlerError{e, "Could not parse JSON", http.StatusBadRequest}
-	}
-
-	challenge.CreationDate = time.Now()
-	challenge.ID = hash(challenge.CreationDate.String())
-	challenge.AccountID = accountId
-
-	key := challengeKey(c, accountId, challenge.ID)
-	_, e = datastore.Put(c, key, &challenge)
-	if e != nil {
-		return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
-	}
-
-	return challenge, nil
-}
-
-func getChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
-	accountId := mux.Vars(r)["accountId"]
-	challengeId := mux.Vars(r)["challengeId"]
-
-	var challenge Challenge
-	err := datastore.Get(c, challengeKey(c, accountId, challengeId), &challenge)
-
-	if err == datastore.ErrNoSuchEntity {
-		return nil, &handlerError{err, "Challenge not found", http.StatusNotFound}
-	} else if err != nil {
-		return nil, &handlerError{err, "Error accessing datastore", http.StatusInternalServerError}
-	}
-
-	return challenge, nil
-}
-
-func updateChallenge(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
-	accountId := mux.Vars(r)["accountId"]
-	challengeId := mux.Vars(r)["challengeId"]
-	_ = c
-
-	account, err := getAccountById(c, accountId)
-	if err != nil {
-		return nil, err
-	}
-
-	authE := authorize(c, account)
-	if authE != nil {
-		return nil, authE
-	}
-
-	challenge, err := getChallenge(w, r)
-	if err != nil {
-		return nil, err
-	}
-	ch := challenge.(Challenge)
-
-	data, e := ioutil.ReadAll(r.Body)
-	if e != nil {
-		return nil, &handlerError{e, "Could not read request", http.StatusBadRequest}
-	}
-
-	var updatedChallenge Challenge
-	e = json.Unmarshal(data, &updatedChallenge)
-	if e != nil {
-		return nil, &handlerError{e, "Could not parse JSON", http.StatusBadRequest}
-	}
-
-	// protect certain fields
-	updatedChallenge.CreationDate = ch.CreationDate
-	updatedChallenge.ID = ch.ID
-	updatedChallenge.AccountID = ch.AccountID
-
-	key := challengeKey(c, accountId, challengeId)
-	_, e = datastore.Put(c, key, &updatedChallenge)
-	if e != nil {
-		return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
-	}
-
-	return updatedChallenge, nil
-}
-
-func export(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
+func export(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
@@ -467,8 +280,7 @@ func export(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError)
 	return sets, nil
 }
 
-func exportCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	s, err := export(w, r)
+func exportCsv(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
 	sets := s.([]WorkSet)
 
 	if err != nil {
@@ -486,8 +298,7 @@ func exportCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 	return nil, nil
 }
 
-func importCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
+func importCsv(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
@@ -548,8 +359,7 @@ func importCsv(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 }
 
 // TODO only works for utc
-func getStats(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
+func getStats(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
@@ -578,8 +388,7 @@ func getStats(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErro
 	return stat, nil
 }
 
-func getSets(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
+func getSets(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 	_ = c
@@ -588,8 +397,7 @@ func getSets(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError
 	return nil, &handlerError{errors.New("import not supported"), "", http.StatusMethodNotAllowed}
 }
 
-func createSet(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-	c := appengine.NewContext(r)
+func createSet(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
@@ -627,10 +435,6 @@ func createSet(w http.ResponseWriter, r *http.Request) (interface{}, *handlerErr
 
 func accountKey(c appengine.Context, id string) *datastore.Key {
 	return datastore.NewKey(c, "Accounts", id, 0, nil)
-}
-
-func challengeKey(c appengine.Context, accountId string, id string) *datastore.Key {
-	return datastore.NewKey(c, "Challenges", id, 0, accountKey(c, accountId))
 }
 
 func workSetKey(c appengine.Context, accountId string, challengeId string) *datastore.Key {
@@ -689,8 +493,7 @@ func getAccountByEmail(c appengine.Context, email string) (*Account, error) {
 	}
 }
 
-func whoami(w http.ResponseWriter, r *http.Request) (interface{}, *handlerError) {
-
+func whoami(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
 	c := appengine.NewContext(r)
 	u := user.Current(c)
 
