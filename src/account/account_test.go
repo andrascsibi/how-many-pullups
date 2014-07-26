@@ -1,4 +1,4 @@
-package accounts
+package account
 
 import (
 	"testing"
@@ -42,8 +42,9 @@ func TestAllHandlers(t *testing.T) {
 	setup()
 	defer close()
 
+	wantA := Account{ID: "foo", Email: "a@b", ScreenName: "dude"}
 	key := NewKey(c, "foo")
-	if _, err := datastore.Put(c, key, &Account{ID: "foo", Email: "a@b", ScreenName: "dude"}); err != nil {
+	if _, err := datastore.Put(c, key, &wantA); err != nil {
 		t.Fatal(err)
 	}
 
@@ -81,7 +82,7 @@ func TestAllHandlers(t *testing.T) {
 	if got, want := a.Email, ""; got != want {
 		t.Errorf("Got email %v, want %v", got, want)
 	}
-	if got, want := a.ScreenName, "dude"; got != want {
+	if got, want := a.ScreenName, wantA.ScreenName; got != want {
 		t.Errorf("Got screen name %v, want %v", got, want)
 	}
 

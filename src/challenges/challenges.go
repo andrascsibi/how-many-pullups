@@ -4,26 +4,22 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 
-	"crypto/md5"
-	"crypto/sha1"
-	"encoding/base64"
 	"encoding/csv"
-	"encoding/hex"
 	"encoding/json"
-	"unicode"
 
 	"io"
 	"io/ioutil"
 
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"time"
 
 	"appengine"
 	"appengine/datastore"
-	"appengine/user"
+
+	"../account"
+	"../handler"
 )
 
 type Challenge struct {
@@ -41,11 +37,11 @@ type WorkSet struct {
 }
 
 func workSetKey(c appengine.Context, accountId string, challengeId string) *datastore.Key {
-	return datastore.NewIncompleteKey(c, "WorkSets", challengeKey(c, accountId, challengeId))
+	return datastore.NewIncompleteKey(c, "WorkSets", NewKey(c, accountId, challengeId))
 }
 
-func challengeKey(c appengine.Context, accountId string, id string) *datastore.Key {
-	return datastore.NewKey(c, "Challenges", id, 0, accountKey(c, accountId))
+func NewKey(c appengine.Context, accountId string, id string) *datastore.Key {
+	return datastore.NewKey(c, "Challenges", id, 0, account.NewKey(c, accountId))
 }
 
 type ChallengeStat struct {
@@ -99,7 +95,7 @@ func getChallenges(c appenginge.Context, w http.ResponseWriter, r *http.Request)
 	accountId := mux.Vars(r)["accountId"]
 
 	q := datastore.NewQuery("Challenges").
-		Ancestor(accountKey(c, accountId)).
+		Ancestor(account.NewKey(c, accountId)).
 		Order("-CreationDate")
 	challenges := make([]Challenge, 0)
 	_, e := q.GetAll(c, &challenges)
@@ -139,7 +135,7 @@ func createChallenge(c appenginge.Context, w http.ResponseWriter, r *http.Reques
 	challenge.ID = hash(challenge.CreationDate.String())
 	challenge.AccountID = accountId
 
-	key := challengeKey(c, accountId, challenge.ID)
+	key := NewKey(c, accountId, challenge.ID)
 	_, e = datastore.Put(c, key, &challenge)
 	if e != nil {
 		return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
@@ -153,7 +149,7 @@ func getChallenge(c appenginge.Context, w http.ResponseWriter, r *http.Request) 
 	challengeId := mux.Vars(r)["challengeId"]
 
 	var challenge Challenge
-	err := datastore.Get(c, challengeKey(c, accountId, challengeId), &challenge)
+	err := datastore.Get(c, NewKey(c, accountId, challengeId), &challenge)
 
 	if err == datastore.ErrNoSuchEntity {
 		return nil, &handlerError{err, "Challenge not found", http.StatusNotFound}
@@ -201,7 +197,7 @@ func updateChallenge(c appenginge.Context, w http.ResponseWriter, r *http.Reques
 	updatedChallenge.ID = ch.ID
 	updatedChallenge.AccountID = ch.AccountID
 
-	key := challengeKey(c, accountId, challengeId)
+	key := NewKey(c, accountId, challengeId)
 	_, e = datastore.Put(c, key, &updatedChallenge)
 	if e != nil {
 		return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
@@ -214,7 +210,7 @@ func export(c appengine.Context, w http.ResponseWriter, r *http.Request) (interf
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
-	q := datastore.NewQuery("WorkSets").Ancestor(challengeKey(c, accountId, challengeId)).Order("-Date")
+	q := datastore.NewQuery("WorkSets").Ancestor(NewKey(c, accountId, challengeId)).Order("-Date")
 	sets := make([]WorkSet, 0)
 	_, err := q.GetAll(c, &sets)
 
@@ -308,7 +304,7 @@ func getStats(c appengine.Context, w http.ResponseWriter, r *http.Request) (inte
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
-	q := datastore.NewQuery("WorkSets").Ancestor(challengeKey(c, accountId, challengeId)).Order("-Date")
+	q := datastore.NewQuery("WorkSets").Ancestor(NewKey(c, accountId, challengeId)).Order("-Date")
 	sets := make([]WorkSet, 0)
 	_, err := q.GetAll(c, &sets)
 
