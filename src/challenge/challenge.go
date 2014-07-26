@@ -1,4 +1,4 @@
-package challenges
+package challenge
 
 import (
 	"github.com/gorilla/mux"
