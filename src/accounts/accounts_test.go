@@ -5,7 +5,8 @@ import (
 
 	"appengine"
 	"appengine/aetest"
-	"errors"
+	"appengine/datastore"
+
 	"net/http"
 	"net/http/httptest"
 )
@@ -34,41 +35,18 @@ func testCtx(r *http.Request) appengine.Context {
 	return c
 }
 
-func TestSuccess(t *testing.T) {
+func TestGetAccounts(t *testing.T) {
 	setup()
 	defer close()
 
-	var tests = []struct {
-		handler    handlerFun
-		wantStatus int
-		wantBody   string
-	}{
-		{
-			func(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *Error) {
-				return struct{ Msg string }{"hello"}, nil
-			},
-			http.StatusOK,
-			`{"Msg":"hello"}`,
-		},
-		{
-			func(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *Error) {
-				return nil, &Error{errors.New("BOOM"), "it went boom", http.StatusTeapot}
-			},
-			http.StatusTeapot,
-			"it went boom\n",
-		},
+	key := datastore.NewKey(c, "Accounts", "", 1, nil)
+	if _, err := datastore.Put(c, key, &Account{ID: "foo", Email: "a@b"}); err != nil {
+		t.Fatal(err)
 	}
-	for _, tc := range tests {
-		w = httptest.NewRecorder()
-		h := WithContext(tc.handler, testCtx)
-		h.ServeHTTP(w, r)
-
-		if w.Code != tc.wantStatus {
-			t.Errorf("Wanted status code %d but got %d", tc.wantStatus, w.Code)
-		}
-
-		if w.Body.String() != tc.wantBody {
-			t.Errorf("Wanted body '%v' but got '%v'", tc.wantBody, w.Body.String())
-		}
+	// unauthorized
+	as, err := getAccounts(c, w, r)
+	if as != nil || err == nil || err.Code != http.StatusForbidden {
+		t.Errorf("Wanted to be forbidden")
 	}
+
 }
