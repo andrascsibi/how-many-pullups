@@ -154,6 +154,8 @@ func getChallenge(c appengine.Context, w http.ResponseWriter, r *http.Request, v
 	var challenge Challenge
 	err := datastore.Get(c, NewKey(c, accountId, challengeId), &challenge)
 
+	fmt.Printf("BOOOO accountId: %v, challengeId %v", accountId, challengeId)
+
 	if err == datastore.ErrNoSuchEntity {
 		return nil, &handler.Error{err, "Challenge not found", http.StatusNotFound}
 	} else if err != nil {

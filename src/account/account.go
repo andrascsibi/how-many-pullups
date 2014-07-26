@@ -173,7 +173,7 @@ func getAccount(c appengine.Context, w http.ResponseWriter, r *http.Request, v m
 	}
 
 	account.Email = ""
-	return account, nil
+	return *account, nil
 }
 
 func follow(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {

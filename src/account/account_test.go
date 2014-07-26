@@ -3,7 +3,6 @@ package account
 import (
 	"testing"
 
-	"appengine"
 	"appengine/aetest"
 	"appengine/datastore"
 	"appengine/user"
@@ -32,10 +31,6 @@ func setup() {
 
 func close() {
 	c.Close()
-}
-
-func testCtx(r *http.Request) appengine.Context {
-	return c
 }
 
 func TestAllHandlers(t *testing.T) {
@@ -75,16 +70,16 @@ func TestAllHandlers(t *testing.T) {
 	// Get account test
 
 	v["accountId"] = "foo"
-	got, err := getAccount(c, w, r, v)
-	if err != nil {
+	if got, err := getAccount(c, w, r, v); err != nil {
 		t.Fatal(err)
-	}
-	a := got.(*Account)
-	if got, want := a.Email, ""; got != want {
-		t.Errorf("Got email %v, want %v", got, want)
-	}
-	if got, want := a.ScreenName, wantA.ScreenName; got != want {
-		t.Errorf("Got screen name %v, want %v", got, want)
+	} else {
+		a := got.(Account)
+		if got, want := a.Email, ""; got != want {
+			t.Errorf("Got email %v, want %v", got, want)
+		}
+		if got, want := a.ScreenName, wantA.ScreenName; got != want {
+			t.Errorf("Got screen name %v, want %v", got, want)
+		}
 	}
 
 }

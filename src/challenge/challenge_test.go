@@ -3,16 +3,23 @@ package challenge
 import (
 	"testing"
 
-	"appengine"
 	"appengine/aetest"
-	"errors"
+	"appengine/datastore"
+	"appengine/user"
+
 	"net/http"
 	"net/http/httptest"
+
+	"bytes"
+	"encoding/json"
+
+	"../account"
 )
 
 var c aetest.Context
 var w *httptest.ResponseRecorder
 var r *http.Request
+var v map[string]string
 
 func setup() {
 	var err error
@@ -24,6 +31,7 @@ func setup() {
 	if err != nil {
 		panic(err.Error())
 	}
+	v = make(map[string]string)
 }
 
 func close() {
@@ -34,37 +42,38 @@ func TestSuccess(t *testing.T) {
 	setup()
 	defer close()
 
-	var tests = []struct {
-		handler    handlerFun
-		wantStatus int
-		wantBody   string
-	}{
-		{
-			func(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *Error) {
-				return struct{ Msg string }{"hello"}, nil
-			},
-			http.StatusOK,
-			`{"Msg":"hello"}`,
-		},
-		{
-			func(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *Error) {
-				return nil, &Error{errors.New("BOOM"), "it went boom", http.StatusTeapot}
-			},
-			http.StatusTeapot,
-			"it went boom\n",
-		},
+	wantA := account.Account{ID: "foo", Email: "a@b", ScreenName: "dude"}
+
+	if _, err := datastore.Put(c, account.NewKey(c, "foo"), &wantA); err != nil {
+		t.Fatal(err)
 	}
-	for _, tc := range tests {
-		w = httptest.NewRecorder()
-		h := WithContext(tc.handler, testCtx)
-		h.ServeHTTP(w, r)
 
-		if w.Code != tc.wantStatus {
-			t.Errorf("Wanted status code %d but got %d", tc.wantStatus, w.Code)
-		}
+	wantC := Challenge{AccountID: "foo", Title: "プルアップ"}
+	u := user.User{Email: wantA.Email, Admin: false}
+	c.Login(&u)
 
-		if w.Body.String() != tc.wantBody {
-			t.Errorf("Wanted body '%v' but got '%v'", tc.wantBody, w.Body.String())
+	bytesIn, _ := json.Marshal(wantC)
+	r, e := http.NewRequest("POST", "/", bytes.NewReader(bytesIn))
+	if e != nil {
+		t.Fatal(e)
+	}
+
+	v["accountId"] = wantC.AccountID
+
+	if got, err := createChallenge(c, w, r, v); err != nil {
+		t.Fatal(err)
+	} else {
+		c := got.(Challenge)
+		wantC.ID = c.ID
+		v["challengeId"] = wantC.ID
+	}
+
+	if got, err := getChallenge(c, w, r, v); err != nil {
+		t.Fatal(err)
+	} else {
+		c := got.(Challenge)
+		if got, want := c.Title, wantC.Title; got != want {
+			t.Errorf("Got title %v, want %v", got, want)
 		}
 	}
 }
