@@ -21,8 +21,8 @@ import (
 	"appengine/datastore"
 	"appengine/user"
 
-	"../handler"
-	"../stringset"
+	"github.com/andrascsibi/how-many-pullups/handler"
+	"github.com/andrascsibi/how-many-pullups/stringset"
 )
 
 type Account struct {

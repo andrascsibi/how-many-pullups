@@ -21,8 +21,8 @@ import (
 	"appengine"
 	"appengine/datastore"
 
-	"../account"
-	"../handler"
+	"github.com/andrascsibi/how-many-pullups/account"
+	"github.com/andrascsibi/how-many-pullups/handler"
 )
 
 type Challenge struct {

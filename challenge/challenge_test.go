@@ -13,7 +13,7 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"../account"
+	"github.com/andrascsibi/how-many-pullups/account"
 )
 
 var c aetest.Context
