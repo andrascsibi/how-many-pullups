@@ -1,9 +1,13 @@
-# How many pullups?
+# PullApp
 
-How many pullups did I do today? A small AppEngine webapp to track my pullup challange progress publicly.
+PullApp is for counting sets and reps. It runs on AppEngine.
 
-## What's the challenge?
+## Project setup
 
-Do 1000 pullups in a single month. That's 50 on every workday.
+check out this project in
 
+    $GOPATH/src/github.com/andrascsibi
 
+make a symlink to the pre-commit hook
+
+    ln -s ../../pre-commit.sh .git/hooks/pre-commit
