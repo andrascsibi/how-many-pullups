@@ -4,8 +4,11 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 
+	"encoding/base64"
 	"encoding/csv"
 	"encoding/json"
+
+	"crypto/sha1"
 
 	"io"
 	"io/ioutil"
@@ -92,7 +95,7 @@ func init() {
 }
 
 func getChallenges(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
-	accountId := mux.Vars(r)["accountId"]
+	accountId := v["accountId"]
 
 	q := datastore.NewQuery("Challenges").
 		Ancestor(account.NewKey(c, accountId)).
@@ -109,13 +112,13 @@ func getChallenges(c appengine.Context, w http.ResponseWriter, r *http.Request, 
 
 func createChallenge(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 
-	accountId := mux.Vars(r)["accountId"]
+	accountId := v["accountId"]
 	account, err := account.ById(c, accountId)
 	if err != nil {
 		return nil, err
 	}
 
-	authE := account.Authorize(c, account)
+	authE := account.Authorize(c)
 	if authE != nil {
 		return nil, authE
 	}
@@ -145,8 +148,8 @@ func createChallenge(c appengine.Context, w http.ResponseWriter, r *http.Request
 }
 
 func getChallenge(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
-	accountId := mux.Vars(r)["accountId"]
-	challengeId := mux.Vars(r)["challengeId"]
+	accountId := v["accountId"]
+	challengeId := v["challengeId"]
 
 	var challenge Challenge
 	err := datastore.Get(c, NewKey(c, accountId, challengeId), &challenge)
@@ -161,21 +164,21 @@ func getChallenge(c appengine.Context, w http.ResponseWriter, r *http.Request, v
 }
 
 func updateChallenge(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
-	accountId := mux.Vars(r)["accountId"]
-	challengeId := mux.Vars(r)["challengeId"]
+	accountId := v["accountId"]
+	challengeId := v["challengeId"]
 	_ = c
 
-	account, err := getAccountById(c, accountId)
+	account, err := account.ById(c, accountId)
 	if err != nil {
 		return nil, err
 	}
 
-	authE := account.Authorize(c, account)
+	authE := account.Authorize(c)
 	if authE != nil {
 		return nil, authE
 	}
 
-	challenge, err := getChallenge(w, r)
+	challenge, err := getChallenge(c, w, r, v)
 	if err != nil {
 		return nil, err
 	}
@@ -207,8 +210,8 @@ func updateChallenge(c appengine.Context, w http.ResponseWriter, r *http.Request
 }
 
 func export(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
-	accountId := mux.Vars(r)["accountId"]
-	challengeId := mux.Vars(r)["challengeId"]
+	accountId := v["accountId"]
+	challengeId := v["challengeId"]
 
 	q := datastore.NewQuery("WorkSets").Ancestor(NewKey(c, accountId, challengeId)).Order("-Date")
 	sets := make([]WorkSet, 0)
@@ -222,6 +225,7 @@ func export(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[s
 }
 
 func exportCsv(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
+	s, err := export(c, w, r, v)
 	sets := s.([]WorkSet)
 
 	if err != nil {
@@ -240,15 +244,15 @@ func exportCsv(c appengine.Context, w http.ResponseWriter, r *http.Request, v ma
 }
 
 func importCsv(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
-	accountId := mux.Vars(r)["accountId"]
-	challengeId := mux.Vars(r)["challengeId"]
+	accountId := v["accountId"]
+	challengeId := v["challengeId"]
 
-	account, aerr := getAccountById(c, accountId)
+	account, aerr := account.ById(c, accountId)
 	if aerr != nil {
 		return nil, aerr
 	}
 
-	authE := account.Authorize(c, account)
+	authE := account.Authorize(c)
 	if authE != nil {
 		return nil, authE
 	}
@@ -301,8 +305,8 @@ func importCsv(c appengine.Context, w http.ResponseWriter, r *http.Request, v ma
 
 // TODO only works for utc
 func getStats(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
-	accountId := mux.Vars(r)["accountId"]
-	challengeId := mux.Vars(r)["challengeId"]
+	accountId := v["accountId"]
+	challengeId := v["challengeId"]
 
 	q := datastore.NewQuery("WorkSets").Ancestor(NewKey(c, accountId, challengeId)).Order("-Date")
 	sets := make([]WorkSet, 0)
@@ -330,8 +334,8 @@ func getStats(c appengine.Context, w http.ResponseWriter, r *http.Request, v map
 }
 
 func getSets(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
-	accountId := mux.Vars(r)["accountId"]
-	challengeId := mux.Vars(r)["challengeId"]
+	accountId := v["accountId"]
+	challengeId := v["challengeId"]
 	_ = c
 	_ = accountId
 	_ = challengeId
@@ -339,15 +343,15 @@ func getSets(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[
 }
 
 func createSet(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
-	accountId := mux.Vars(r)["accountId"]
-	challengeId := mux.Vars(r)["challengeId"]
+	accountId := v["accountId"]
+	challengeId := v["challengeId"]
 
-	account, err := getAccountById(c, accountId)
+	account, err := account.ById(c, accountId)
 	if err != nil {
 		return nil, err
 	}
 
-	authE := account.Authorize(c, account)
+	authE := account.Authorize(c)
 	if authE != nil {
 		return nil, authE
 	}
@@ -372,4 +376,11 @@ func createSet(c appengine.Context, w http.ResponseWriter, r *http.Request, v ma
 	}
 
 	return newSet, nil
+}
+
+func hash(id string) string {
+	hasher := sha1.New()
+	io.WriteString(hasher, id)
+	io.WriteString(hasher, "salt it real good DbqOFzkk") // TODO: should come from environment
+	return base64.URLEncoding.EncodeToString(hasher.Sum(nil))[:8]
 }

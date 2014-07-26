@@ -5,8 +5,6 @@ import (
 	"net/http"
 
 	"crypto/md5"
-	"crypto/sha1"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"unicode"
@@ -305,13 +303,6 @@ type LoginData struct {
 	Unregistered bool
 	LoginURL     string
 	LogoutURL    string
-}
-
-func hash(id string) string {
-	hasher := sha1.New()
-	io.WriteString(hasher, id)
-	io.WriteString(hasher, "salt it real good DbqOFzkk") // TODO: should come from environment
-	return base64.URLEncoding.EncodeToString(hasher.Sum(nil))[:8]
 }
 
 func md5hex(src string) string {
