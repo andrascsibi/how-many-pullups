@@ -38,6 +38,29 @@ type Account struct {
 	Followers []string
 }
 
+func (a *Account) Authorize(c appengine.Context) *handler.Error {
+	u := user.Current(c)
+	if u == nil {
+		return &handler.Error{nil, "Login requried", http.StatusForbidden}
+	}
+	if u.Admin {
+		return nil
+	}
+	// XXX
+	if a == nil || u.Email != a.Email {
+		return &handler.Error{nil, "Unauthorized", http.StatusUnauthorized}
+	}
+	return nil
+}
+
+func isAdmin(c appengine.Context) bool {
+	u := user.Current(c)
+	if u == nil {
+		return false
+	}
+	return u.Admin
+}
+
 func init() {
 	r := mux.NewRouter()
 	r.Handle("/whoami", handler.New(whoami)).Methods("GET")
@@ -65,9 +88,8 @@ func init() {
 
 func getAccounts(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 
-	authE := authorize(c, nil)
-	if authE != nil {
-		return nil, authE
+	if !isAdmin(c) {
+		return nil, &handler.Error{nil, "only admins have access to this", http.StatusForbidden}
 	}
 
 	q := datastore.NewQuery("Accounts").Order("-RegDate").Limit(100)
@@ -92,7 +114,7 @@ func createAccount(c appengine.Context, w http.ResponseWriter, r *http.Request, 
 		return nil, &handler.Error{e, "Could not parse JSON", http.StatusBadRequest}
 	}
 
-	authE := authorize(c, &newAccount)
+	authE := newAccount.Authorize(c)
 	if authE != nil {
 		return nil, authE
 	}
@@ -147,7 +169,7 @@ func validate(username string) error {
 func getAccount(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 	accountId := v["accountId"]
 
-	account, err := getAccountById(c, accountId)
+	account, err := ById(c, accountId)
 	if err != nil {
 		return nil, err
 	}
@@ -161,17 +183,17 @@ func follow(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[s
 	followee := v["followee"]
 	unfollow := v["op"] == "unfollow"
 
-	followerA, err := getAccountById(c, follower)
+	followerA, err := ById(c, follower)
 	if err != nil {
 		return nil, err
 	}
 
-	followeeA, err := getAccountById(c, followee)
+	followeeA, err := ById(c, followee)
 	if err != nil {
 		return nil, err
 	}
 
-	authE := authorize(c, followerA)
+	authE := followerA.Authorize(c)
 	if authE != nil {
 		return nil, authE
 	}
@@ -213,21 +235,7 @@ func NewKey(c appengine.Context, id string) *datastore.Key {
 	return datastore.NewKey(c, "Accounts", id, 0, nil)
 }
 
-func authorize(c appengine.Context, a *Account) *handler.Error {
-	u := user.Current(c)
-	if u == nil {
-		return &handler.Error{nil, "Login requried", http.StatusForbidden}
-	}
-	if u.Admin {
-		return nil
-	}
-	if a == nil || u.Email != a.Email {
-		return &handler.Error{nil, "Unauthorized", http.StatusUnauthorized}
-	}
-	return nil
-}
-
-func getAccountById(c appengine.Context, id string) (*Account, *handler.Error) {
+func ById(c appengine.Context, id string) (*Account, *handler.Error) {
 	var account Account
 	err := datastore.Get(c, NewKey(c, id), &account)
 

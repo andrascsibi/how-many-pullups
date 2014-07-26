@@ -48,33 +48,34 @@ func TestAllHandlers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := getAccounts(c, w, r, v)
-	if got != nil || err == nil || err.Code != http.StatusForbidden {
-		t.Errorf("Wanted to be forbidden")
+	// Authorize tests
+	if gotE, wantC := wantA.Authorize(c), http.StatusForbidden; gotE == nil || gotE.Code != wantC {
+		t.Errorf("Wanted %v, got %v", wantC, gotE)
 	}
 
-	u := user.User{Email: "a@b", Admin: false}
+	u := user.User{Email: wantA.Email, Admin: false}
 	c.Login(&u)
-	got, err = getAccounts(c, w, r, v)
-	if got != nil || err == nil || err.Code != http.StatusUnauthorized {
-		t.Errorf("Wanted to be unathorized")
+	if gotE := wantA.Authorize(c); gotE != nil {
+		t.Errorf("Wanted to be let through because email matches")
 	}
 
+	u.Email = "b@c"
+	c.Login(&u)
+	if gotE, wantC := wantA.Authorize(c), http.StatusUnauthorized; gotE == nil || gotE.Code != wantC {
+		t.Errorf("Wanted %v, got %v", wantC, gotE)
+	}
+
+	u.Email = "b@c"
 	u.Admin = true
 	c.Login(&u)
-	got, err = getAccounts(c, w, r, v)
-	if got == nil || err != nil {
-		t.Errorf("Wanted to get some accounts back")
+	if gotE := wantA.Authorize(c); gotE != nil {
+		t.Errorf("Wanted to be let through because admin")
 	}
 
-	// XXX query result is not consistent yet
-	// as := got.([]Account)
-	// if len(as) != 1 || as[0].ID != "foo" {
-	// 	t.Errorf("Wanted to get 'foo' back, got %v", as)
-	// }
+	// Get account test
 
 	v["accountId"] = "foo"
-	got, err = getAccount(c, w, r, v)
+	got, err := getAccount(c, w, r, v)
 	if err != nil {
 		t.Fatal(err)
 	}

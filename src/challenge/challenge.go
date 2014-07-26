@@ -91,7 +91,7 @@ func init() {
 
 }
 
-func getChallenges(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
+func getChallenges(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 
 	q := datastore.NewQuery("Challenges").
@@ -101,34 +101,34 @@ func getChallenges(c appenginge.Context, w http.ResponseWriter, r *http.Request)
 	_, e := q.GetAll(c, &challenges)
 
 	if e != nil {
-		return nil, &handlerError{e, "Error querying datastore", http.StatusInternalServerError}
+		return nil, &handler.Error{e, "Error querying datastore", http.StatusInternalServerError}
 	}
 
 	return challenges, nil
 }
 
-func createChallenge(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
+func createChallenge(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 
 	accountId := mux.Vars(r)["accountId"]
-	account, err := getAccountById(c, accountId)
+	account, err := account.ById(c, accountId)
 	if err != nil {
 		return nil, err
 	}
 
-	authE := authorize(c, account)
+	authE := account.Authorize(c, account)
 	if authE != nil {
 		return nil, authE
 	}
 
 	data, e := ioutil.ReadAll(r.Body)
 	if e != nil {
-		return nil, &handlerError{e, "Could not read request", http.StatusBadRequest}
+		return nil, &handler.Error{e, "Could not read request", http.StatusBadRequest}
 	}
 
 	var challenge Challenge
 	e = json.Unmarshal(data, &challenge)
 	if e != nil {
-		return nil, &handlerError{e, "Could not parse JSON", http.StatusBadRequest}
+		return nil, &handler.Error{e, "Could not parse JSON", http.StatusBadRequest}
 	}
 
 	challenge.CreationDate = time.Now()
@@ -138,13 +138,13 @@ func createChallenge(c appenginge.Context, w http.ResponseWriter, r *http.Reques
 	key := NewKey(c, accountId, challenge.ID)
 	_, e = datastore.Put(c, key, &challenge)
 	if e != nil {
-		return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
+		return nil, &handler.Error{e, "Error storing in datastore", http.StatusInternalServerError}
 	}
 
 	return challenge, nil
 }
 
-func getChallenge(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
+func getChallenge(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
@@ -152,15 +152,15 @@ func getChallenge(c appenginge.Context, w http.ResponseWriter, r *http.Request) 
 	err := datastore.Get(c, NewKey(c, accountId, challengeId), &challenge)
 
 	if err == datastore.ErrNoSuchEntity {
-		return nil, &handlerError{err, "Challenge not found", http.StatusNotFound}
+		return nil, &handler.Error{err, "Challenge not found", http.StatusNotFound}
 	} else if err != nil {
-		return nil, &handlerError{err, "Error accessing datastore", http.StatusInternalServerError}
+		return nil, &handler.Error{err, "Error accessing datastore", http.StatusInternalServerError}
 	}
 
 	return challenge, nil
 }
 
-func updateChallenge(c appenginge.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
+func updateChallenge(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 	_ = c
@@ -170,7 +170,7 @@ func updateChallenge(c appenginge.Context, w http.ResponseWriter, r *http.Reques
 		return nil, err
 	}
 
-	authE := authorize(c, account)
+	authE := account.Authorize(c, account)
 	if authE != nil {
 		return nil, authE
 	}
@@ -183,13 +183,13 @@ func updateChallenge(c appenginge.Context, w http.ResponseWriter, r *http.Reques
 
 	data, e := ioutil.ReadAll(r.Body)
 	if e != nil {
-		return nil, &handlerError{e, "Could not read request", http.StatusBadRequest}
+		return nil, &handler.Error{e, "Could not read request", http.StatusBadRequest}
 	}
 
 	var updatedChallenge Challenge
 	e = json.Unmarshal(data, &updatedChallenge)
 	if e != nil {
-		return nil, &handlerError{e, "Could not parse JSON", http.StatusBadRequest}
+		return nil, &handler.Error{e, "Could not parse JSON", http.StatusBadRequest}
 	}
 
 	// protect certain fields
@@ -200,13 +200,13 @@ func updateChallenge(c appenginge.Context, w http.ResponseWriter, r *http.Reques
 	key := NewKey(c, accountId, challengeId)
 	_, e = datastore.Put(c, key, &updatedChallenge)
 	if e != nil {
-		return nil, &handlerError{e, "Error storing in datastore", http.StatusInternalServerError}
+		return nil, &handler.Error{e, "Error storing in datastore", http.StatusInternalServerError}
 	}
 
 	return updatedChallenge, nil
 }
 
-func export(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
+func export(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
@@ -221,7 +221,7 @@ func export(c appengine.Context, w http.ResponseWriter, r *http.Request) (interf
 	return sets, nil
 }
 
-func exportCsv(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
+func exportCsv(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 	sets := s.([]WorkSet)
 
 	if err != nil {
@@ -239,7 +239,7 @@ func exportCsv(c appengine.Context, w http.ResponseWriter, r *http.Request) (int
 	return nil, nil
 }
 
-func importCsv(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
+func importCsv(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
@@ -248,7 +248,7 @@ func importCsv(c appengine.Context, w http.ResponseWriter, r *http.Request) (int
 		return nil, aerr
 	}
 
-	authE := authorize(c, account)
+	authE := account.Authorize(c, account)
 	if authE != nil {
 		return nil, authE
 	}
@@ -300,7 +300,7 @@ func importCsv(c appengine.Context, w http.ResponseWriter, r *http.Request) (int
 }
 
 // TODO only works for utc
-func getStats(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
+func getStats(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
@@ -329,7 +329,7 @@ func getStats(c appengine.Context, w http.ResponseWriter, r *http.Request) (inte
 	return stat, nil
 }
 
-func getSets(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
+func getSets(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 	_ = c
@@ -338,7 +338,7 @@ func getSets(c appengine.Context, w http.ResponseWriter, r *http.Request) (inter
 	return nil, &handler.Error{errors.New("import not supported"), "", http.StatusMethodNotAllowed}
 }
 
-func createSet(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
+func createSet(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 	accountId := mux.Vars(r)["accountId"]
 	challengeId := mux.Vars(r)["challengeId"]
 
@@ -347,7 +347,7 @@ func createSet(c appengine.Context, w http.ResponseWriter, r *http.Request) (int
 		return nil, err
 	}
 
-	authE := authorize(c, account)
+	authE := account.Authorize(c, account)
 	if authE != nil {
 		return nil, authE
 	}
