@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"github.com/gorilla/mux"
+
 	"net/http"
 
 	"encoding/json"
@@ -15,7 +17,7 @@ type Error struct {
 }
 
 type ctxGetter func(r *http.Request) appengine.Context
-type handlerFun func(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *Error)
+type handlerFun func(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *Error)
 
 type handler struct {
 	handlerFun    handlerFun
@@ -36,7 +38,8 @@ func WithContext(hf handlerFun, cg ctxGetter) http.Handler {
 func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	c := h.contextGetter(r)
-	response, err := h.handlerFun(c, w, r)
+
+	response, err := h.handlerFun(c, w, r, mux.Vars(r))
 
 	if err != nil {
 		c.Errorf("%v", err.Error)

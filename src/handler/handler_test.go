@@ -44,14 +44,14 @@ func TestSuccess(t *testing.T) {
 		wantBody   string
 	}{
 		{
-			func(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *Error) {
+			func(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *Error) {
 				return struct{ Msg string }{"hello"}, nil
 			},
 			http.StatusOK,
 			`{"Msg":"hello"}`,
 		},
 		{
-			func(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *Error) {
+			func(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *Error) {
 				return nil, &Error{errors.New("BOOM"), "it went boom", http.StatusTeapot}
 			},
 			http.StatusTeapot,

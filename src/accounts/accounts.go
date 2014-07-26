@@ -63,7 +63,7 @@ func init() {
 	http.Handle("/", r)
 }
 
-func getAccounts(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
+func getAccounts(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 
 	authE := authorize(c, nil)
 	if authE != nil {
@@ -79,7 +79,7 @@ func getAccounts(c appengine.Context, w http.ResponseWriter, r *http.Request) (i
 	return as, nil
 }
 
-func createAccount(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
+func createAccount(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 
 	data, e := ioutil.ReadAll(r.Body)
 	if e != nil {
@@ -109,7 +109,7 @@ func createAccount(c appengine.Context, w http.ResponseWriter, r *http.Request) 
 		return nil, &handler.Error{e, e.Error(), http.StatusBadRequest}
 	}
 
-	key := accountKey(c, newAccount.ID)
+	key := NewKey(c, newAccount.ID)
 
 	var accInDb Account
 	err = datastore.Get(c, key, &accInDb)
@@ -144,8 +144,8 @@ func validate(username string) error {
 	return nil
 }
 
-func getAccount(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
-	accountId := mux.Vars(r)["accountId"]
+func getAccount(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
+	accountId := v["accountId"]
 
 	account, err := getAccountById(c, accountId)
 	if err != nil {
@@ -156,10 +156,10 @@ func getAccount(c appengine.Context, w http.ResponseWriter, r *http.Request) (in
 	return account, nil
 }
 
-func follow(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
-	follower := mux.Vars(r)["follower"]
-	followee := mux.Vars(r)["followee"]
-	unfollow := mux.Vars(r)["op"] == "unfollow"
+func follow(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
+	follower := v["follower"]
+	followee := v["followee"]
+	unfollow := v["op"] == "unfollow"
 
 	followerA, err := getAccountById(c, follower)
 	if err != nil {
@@ -185,11 +185,11 @@ func follow(c appengine.Context, w http.ResponseWriter, r *http.Request) (interf
 	}
 
 	trErr := datastore.RunInTransaction(c, func(c appengine.Context) error {
-		_, err := datastore.Put(c, accountKey(c, follower), followerA)
+		_, err := datastore.Put(c, NewKey(c, follower), followerA)
 		if err != nil {
 			return err
 		}
-		_, err = datastore.Put(c, accountKey(c, followee), followeeA)
+		_, err = datastore.Put(c, NewKey(c, followee), followeeA)
 		if err != nil {
 			return err
 		}
@@ -203,14 +203,13 @@ func follow(c appengine.Context, w http.ResponseWriter, r *http.Request) (interf
 	return followerA, nil
 }
 
-func updateAccount(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
-	accountId := mux.Vars(r)["accountId"]
-	_ = c
+func updateAccount(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
+	accountId := v["accountId"]
 	_ = accountId
 	return nil, &handler.Error{errors.New("updating account not supported"), "", http.StatusMethodNotAllowed}
 }
 
-func accountKey(c appengine.Context, id string) *datastore.Key {
+func NewKey(c appengine.Context, id string) *datastore.Key {
 	return datastore.NewKey(c, "Accounts", id, 0, nil)
 }
 
@@ -230,7 +229,7 @@ func authorize(c appengine.Context, a *Account) *handler.Error {
 
 func getAccountById(c appengine.Context, id string) (*Account, *handler.Error) {
 	var account Account
-	err := datastore.Get(c, accountKey(c, id), &account)
+	err := datastore.Get(c, NewKey(c, id), &account)
 
 	if err == datastore.ErrNoSuchEntity {
 		return nil, &handler.Error{err, "Account not found", http.StatusNotFound}
@@ -266,7 +265,7 @@ func getAccountByEmail(c appengine.Context, email string) (*Account, error) {
 	}
 }
 
-func whoami(c appengine.Context, w http.ResponseWriter, r *http.Request) (interface{}, *handler.Error) {
+func whoami(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {
 	u := user.Current(c)
 
 	if u == nil {
