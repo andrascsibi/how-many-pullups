@@ -36,6 +36,12 @@ type Account struct {
 	Followers []string
 }
 
+const kind = "Accounts"
+
+func NewKey(c appengine.Context, id string) *datastore.Key {
+	return datastore.NewKey(c, kind, id, 0, nil)
+}
+
 func RegisterHandlers(r *mux.Router) {
 
 	r.Handle("/whoami", handler.New(whoami)).Methods("GET")
@@ -58,6 +64,25 @@ func RegisterHandlers(r *mux.Router) {
 		handler.New(createAccount)). // TODO update?
 		Methods("POST")
 
+}
+
+func ById(c appengine.Context, id string) (*Account, *handler.Error) {
+	var account Account
+	err := datastore.Get(c, NewKey(c, id), &account)
+
+	if err == datastore.ErrNoSuchEntity {
+		return nil, &handler.Error{err, "Account not found", http.StatusNotFound}
+	} else if err != nil {
+		return nil, &handler.Error{err, "Error getting account", http.StatusInternalServerError}
+	}
+
+	account.EmailMD5 = md5hex(account.Email)
+	if account.ScreenName == "" {
+		a := []rune(account.ID)
+		a[0] = unicode.ToUpper(a[0])
+		account.ScreenName = string(a)
+	}
+	return &account, nil
 }
 
 func (a *Account) Authorize(c appengine.Context) *handler.Error {
@@ -89,7 +114,7 @@ func getAccounts(c appengine.Context, w http.ResponseWriter, r *http.Request, v 
 		return nil, &handler.Error{nil, "only admins have access to this", http.StatusForbidden}
 	}
 
-	q := datastore.NewQuery("Accounts").Order("-RegDate").Limit(100)
+	q := datastore.NewQuery(kind).Order("-RegDate").Limit(100)
 	as := make([]Account, 0)
 	_, err := q.GetAll(c, &as)
 	if err != nil {
@@ -228,31 +253,8 @@ func updateAccount(c appengine.Context, w http.ResponseWriter, r *http.Request, 
 	return nil, &handler.Error{errors.New("updating account not supported"), "", http.StatusMethodNotAllowed}
 }
 
-func NewKey(c appengine.Context, id string) *datastore.Key {
-	return datastore.NewKey(c, "Accounts", id, 0, nil)
-}
-
-func ById(c appengine.Context, id string) (*Account, *handler.Error) {
-	var account Account
-	err := datastore.Get(c, NewKey(c, id), &account)
-
-	if err == datastore.ErrNoSuchEntity {
-		return nil, &handler.Error{err, "Account not found", http.StatusNotFound}
-	} else if err != nil {
-		return nil, &handler.Error{err, "Error getting account", http.StatusInternalServerError}
-	}
-
-	account.EmailMD5 = md5hex(account.Email)
-	if account.ScreenName == "" {
-		a := []rune(account.ID)
-		a[0] = unicode.ToUpper(a[0])
-		account.ScreenName = string(a)
-	}
-	return &account, nil
-}
-
 func getAccountByEmail(c appengine.Context, email string) (*Account, error) {
-	q := datastore.NewQuery("Accounts").Filter("Email =", email)
+	q := datastore.NewQuery(kind).Filter("Email =", email)
 
 	var accounts []Account
 	_, err := q.GetAll(c, &accounts)
