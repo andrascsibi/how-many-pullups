@@ -36,6 +36,30 @@ type Account struct {
 	Followers []string
 }
 
+func RegisterHandlers(r *mux.Router) {
+
+	r.Handle("/whoami", handler.New(whoami)).Methods("GET")
+
+	r.Handle("/accounts",
+		handler.New(getAccounts)).
+		Methods("GET")
+	r.Handle("/accounts",
+		handler.New(createAccount)).
+		Methods("POST")
+
+	r.Handle("/accounts/{op:follow|unfollow}/{follower}/{followee}",
+		handler.New(follow)).
+		Methods("POST")
+
+	r.Handle("/accounts/{accountId}",
+		handler.New(getAccount)).
+		Methods("GET")
+	r.Handle("/accounts/{accountId}",
+		handler.New(createAccount)). // TODO update?
+		Methods("POST")
+
+}
+
 func (a *Account) Authorize(c appengine.Context) *handler.Error {
 	u := user.Current(c)
 	if u == nil {
@@ -57,31 +81,6 @@ func isAdmin(c appengine.Context) bool {
 		return false
 	}
 	return u.Admin
-}
-
-func init() {
-	r := mux.NewRouter()
-	r.Handle("/whoami", handler.New(whoami)).Methods("GET")
-
-	r.Handle("/accounts",
-		handler.New(getAccounts)).
-		Methods("GET")
-	r.Handle("/accounts",
-		handler.New(createAccount)).
-		Methods("POST")
-
-	r.Handle("/accounts/{op:follow|unfollow}/{follower}/{followee}",
-		handler.New(follow)).
-		Methods("POST")
-
-	r.Handle("/accounts/{accountId}",
-		handler.New(getAccount)).
-		Methods("GET")
-	r.Handle("/accounts/{accountId}",
-		handler.New(createAccount)). // TODO update?
-		Methods("POST")
-
-	http.Handle("/", r)
 }
 
 func getAccounts(c appengine.Context, w http.ResponseWriter, r *http.Request, v map[string]string) (interface{}, *handler.Error) {

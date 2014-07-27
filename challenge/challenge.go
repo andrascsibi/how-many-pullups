@@ -54,8 +54,7 @@ type ChallengeStat struct {
 	MaxDate time.Time
 }
 
-func init() {
-	r := mux.NewRouter()
+func RegisterHandlers(r *mux.Router) {
 
 	r.Handle("/accounts/{accountId}/challenges",
 		handler.New(getChallenges)).
