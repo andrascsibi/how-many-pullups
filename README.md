@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/andrascsibi/how-many-pullups.svg?branch=master)](https://travis-ci.org/andrascsibi/how-many-pullups)
+
 # PullApp
 
 PullApp is for counting sets and reps. It runs on AppEngine. Here:
