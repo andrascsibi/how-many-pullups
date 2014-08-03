@@ -6,5 +6,5 @@ install:
   - go get github.com/gorilla/mux
 
 # run build
-script: /tmp/go_appengine/goapp test ./...
+script: /tmp/go_appengine/goapp test $TRAVIS_BUILD_DIR/...
 
