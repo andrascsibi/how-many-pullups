@@ -7,6 +7,9 @@ import (
 	"appengine/datastore"
 	"appengine/user"
 
+  "fmt"
+  "os"
+
 	"net/http"
 	"net/http/httptest"
 )
@@ -18,7 +21,8 @@ var v map[string]string
 
 func setup() {
 	var err error
-	c, err = aetest.NewContext(nil)
+	opts := aetest.Options{AppID: fmt.Sprintf("app-test-%v", os.Getpid())}
+	c, err = aetest.NewContext(&opts)
 	if err != nil {
 		panic(err.Error())
 	}
