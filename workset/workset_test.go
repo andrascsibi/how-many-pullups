@@ -12,6 +12,8 @@ import (
 
   "bytes"
   "encoding/json"
+  "fmt"
+  "os"
 
   "github.com/andrascsibi/how-many-pullups/account"
   "github.com/andrascsibi/how-many-pullups/challenge"
@@ -24,7 +26,8 @@ var v map[string]string
 
 func setup() {
   var err error
-  c, err = aetest.NewContext(nil)
+  opts := aetest.Options{AppID: fmt.Sprintf("app-test-%v", os.Getpid())}
+  c, err = aetest.NewContext(&opts)
   if err != nil {
     panic(err.Error())
   }
