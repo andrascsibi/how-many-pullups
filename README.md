@@ -2,7 +2,7 @@
 
 # PullApp
 
-PullApp is for counting sets and reps. It runs on AppEngine. Here:
+PullApp is for counting sets and reps. 💪  It runs on AppEngine. Here:
 
 [http://pull-app.appspot.com](http://pull-app.appspot.com)
 
